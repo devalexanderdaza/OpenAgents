@@ -48,7 +48,7 @@ REPO_URL="https://github.com/darrenhinde/OpenAgents"
 BRANCH="${OPENCODE_BRANCH:-main}"  # Allow override via environment variable
 RAW_URL="https://raw.githubusercontent.com/darrenhinde/OpenAgents/${BRANCH}"
 REGISTRY_URL="${RAW_URL}/registry.json"
-INSTALL_DIR=".opencode"
+INSTALL_DIR="${OPENCODE_INSTALL_DIR:-.opencode}"  # Allow override via environment variable
 TEMP_DIR="/tmp/opencode-installer-$$"
 
 # Global variables
@@ -56,6 +56,7 @@ SELECTED_COMPONENTS=()
 INSTALL_MODE=""
 PROFILE=""
 NON_INTERACTIVE=false
+CUSTOM_INSTALL_DIR=""  # Set via --install-dir argument
 
 #############################################################################
 # Utility Functions
@@ -89,6 +90,90 @@ print_warning() {
 
 print_step() {
     echo -e "\n${MAGENTA}${BOLD}▶${NC} $1\n"
+}
+
+#############################################################################
+# Path Handling (Cross-Platform)
+#############################################################################
+
+normalize_and_validate_path() {
+    local input_path="$1"
+    local normalized_path
+    
+    # Handle empty path
+    if [ -z "$input_path" ]; then
+        echo ""
+        return 1
+    fi
+    
+    # Expand tilde to $HOME (works on Linux, macOS, Windows Git Bash)
+    if [[ $input_path == ~* ]]; then
+        normalized_path="${HOME}${input_path:1}"
+    else
+        normalized_path="$input_path"
+    fi
+    
+    # Convert backslashes to forward slashes (Windows compatibility)
+    normalized_path="${normalized_path//\\//}"
+    
+    # Remove trailing slashes
+    normalized_path="${normalized_path%/}"
+    
+    # If path is relative, make it absolute based on current directory
+    if [[ ! "$normalized_path" = /* ]] && [[ ! "$normalized_path" =~ ^[A-Za-z]: ]]; then
+        normalized_path="$(pwd)/${normalized_path}"
+    fi
+    
+    echo "$normalized_path"
+    return 0
+}
+
+validate_install_path() {
+    local path="$1"
+    local parent_dir
+    
+    # Get parent directory
+    parent_dir="$(dirname "$path")"
+    
+    # Check if parent directory exists
+    if [ ! -d "$parent_dir" ]; then
+        print_error "Parent directory does not exist: $parent_dir"
+        return 1
+    fi
+    
+    # Check if parent directory is writable
+    if [ ! -w "$parent_dir" ]; then
+        print_error "No write permission for directory: $parent_dir"
+        return 1
+    fi
+    
+    # If target directory exists, check if it's writable
+    if [ -d "$path" ] && [ ! -w "$path" ]; then
+        print_error "No write permission for directory: $path"
+        return 1
+    fi
+    
+    return 0
+}
+
+get_global_install_path() {
+    # Return platform-appropriate global installation path
+    case "$PLATFORM" in
+        macOS)
+            # macOS: Use XDG standard (consistent with Linux)
+            echo "${HOME}/.config/opencode"
+            ;;
+        Linux)
+            echo "${HOME}/.config/opencode"
+            ;;
+        Windows)
+            # Windows Git Bash/WSL: Use same as Linux
+            echo "${HOME}/.config/opencode"
+            ;;
+        *)
+            echo "${HOME}/.config/opencode"
+            ;;
+    esac
 }
 
 #############################################################################
@@ -241,6 +326,92 @@ check_interactive_mode() {
         echo ""
         cleanup_and_exit 1
     fi
+}
+
+show_install_location_menu() {
+    check_interactive_mode
+    
+    clear
+    print_header
+    
+    local global_path=$(get_global_install_path)
+    
+    echo -e "${BOLD}Choose installation location:${NC}\n"
+    echo -e "  ${GREEN}1) Local${NC} - Install to ${CYAN}.opencode/${NC} in current directory"
+    echo "     (Best for project-specific agents)"
+    echo ""
+    echo -e "  ${BLUE}2) Global${NC} - Install to ${CYAN}${global_path}${NC}"
+    echo "     (Best for user-wide agents available everywhere)"
+    echo ""
+    echo -e "  ${MAGENTA}3) Custom${NC} - Enter exact path"
+    echo "     Examples:"
+    case "$PLATFORM" in
+        Windows)
+            echo "       ${CYAN}C:/Users/username/my-agents${NC} or ${CYAN}~/my-agents${NC}"
+            ;;
+        *)
+            echo "       ${CYAN}/home/username/my-agents${NC} or ${CYAN}~/my-agents${NC}"
+            ;;
+    esac
+    echo ""
+    echo "  4) Back / Exit"
+    echo ""
+    read -p "Enter your choice [1-4]: " location_choice
+    
+    case $location_choice in
+        1)
+            INSTALL_DIR=".opencode"
+            print_success "Installing to local directory: .opencode/"
+            sleep 1
+            ;;
+        2)
+            INSTALL_DIR="$global_path"
+            print_success "Installing to global directory: $global_path"
+            sleep 1
+            ;;
+        3)
+            echo ""
+            read -p "Enter installation path: " custom_path
+            
+            if [ -z "$custom_path" ]; then
+                print_error "No path entered"
+                sleep 2
+                show_install_location_menu
+                return
+            fi
+            
+            local normalized_path=$(normalize_and_validate_path "$custom_path")
+            
+            if [ $? -ne 0 ]; then
+                print_error "Invalid path"
+                sleep 2
+                show_install_location_menu
+                return
+            fi
+            
+            if ! validate_install_path "$normalized_path"; then
+                echo ""
+                read -p "Continue anyway? [y/N]: " continue_choice
+                if [[ ! $continue_choice =~ ^[Yy] ]]; then
+                    show_install_location_menu
+                    return
+                fi
+            fi
+            
+            INSTALL_DIR="$normalized_path"
+            print_success "Installing to custom directory: $INSTALL_DIR"
+            sleep 1
+            ;;
+        4)
+            cleanup_and_exit 0
+            ;;
+        *)
+            print_error "Invalid choice"
+            sleep 2
+            show_install_location_menu
+            return
+            ;;
+    esac
 }
 
 show_main_menu() {
@@ -486,6 +657,8 @@ show_installation_preview() {
         echo -e "Mode: ${GREEN}Custom${NC}"
     fi
     
+    echo -e "Installation directory: ${CYAN}${INSTALL_DIR}${NC}"
+    
     echo -e "\nComponents to install (${#SELECTED_COMPONENTS[@]} total):\n"
     
     # Group by type
@@ -592,18 +765,18 @@ show_collision_report() {
 }
 
 get_install_strategy() {
-    echo -e "${BOLD}How would you like to proceed?${NC}\n"
-    echo "  1) ${GREEN}Skip existing${NC} - Only install new files, keep all existing files unchanged"
-    echo "  2) ${YELLOW}Overwrite all${NC} - Replace existing files with new versions (your changes will be lost)"
-    echo "  3) ${CYAN}Backup & overwrite${NC} - Backup existing files, then install new versions"
-    echo "  4) ${RED}Cancel${NC} - Exit without making changes"
-    echo ""
+    echo -e "${BOLD}How would you like to proceed?${NC}\n" >&2
+    echo "  1) ${GREEN}Skip existing${NC} - Only install new files, keep all existing files unchanged" >&2
+    echo "  2) ${YELLOW}Overwrite all${NC} - Replace existing files with new versions (your changes will be lost)" >&2
+    echo "  3) ${CYAN}Backup & overwrite${NC} - Backup existing files, then install new versions" >&2
+    echo "  4) ${RED}Cancel${NC} - Exit without making changes" >&2
+    echo "" >&2
     read -p "Enter your choice [1-4]: " strategy_choice
     
     case $strategy_choice in
         1) echo "skip" ;;
         2) 
-            echo ""
+            echo "" >&2
             print_warning "This will overwrite existing files. Your changes will be lost!"
             read -p "Are you sure? Type 'yes' to confirm: " confirm
             if [ "$confirm" = "yes" ]; then
@@ -665,7 +838,7 @@ perform_installation() {
                     local backup_file="${backup_dir}/${file}"
                     mkdir -p "$(dirname "$backup_file")"
                     if cp "$file" "$backup_file" 2>/dev/null; then
-                        ((backup_count++))
+                        backup_count=$((backup_count + 1))
                     else
                         print_warning "Failed to backup: $file"
                     fi
@@ -701,7 +874,7 @@ perform_installation() {
         
         if [ -z "$path" ] || [ "$path" = "null" ]; then
             print_warning "Could not find path for ${comp}"
-            ((failed++))
+            failed=$((failed + 1))
             continue
         fi
         
@@ -714,7 +887,7 @@ perform_installation() {
         # Check if file exists and we're in skip mode
         if [ "$file_existed" = true ] && [ "$install_strategy" = "skip" ]; then
             print_info "Skipped existing: ${type}:${id}"
-            ((skipped++))
+            skipped=$((skipped + 1))
             continue
         fi
         
@@ -732,10 +905,10 @@ perform_installation() {
             else
                 print_success "Installed ${type}: ${id}"
             fi
-            ((installed++))
+            installed=$((installed + 1))
         else
             print_error "Failed to install ${type}: ${id}"
-            ((failed++))
+            failed=$((failed + 1))
         fi
     done
     
@@ -769,15 +942,24 @@ show_post_install() {
     echo ""
     print_step "Next Steps"
     
-    echo "1. Review the installed components in .opencode/"
-    echo "2. Copy env.example to .env and configure:"
-    echo "   ${CYAN}cp env.example .env${NC}"
-    echo "3. Start using OpenCode agents:"
+    echo "1. Review the installed components in ${CYAN}${INSTALL_DIR}/${NC}"
+    
+    # Check if env.example was installed
+    if [ -f "${INSTALL_DIR}/../env.example" ] || [ -f "env.example" ]; then
+        echo "2. Copy env.example to .env and configure:"
+        echo "   ${CYAN}cp env.example .env${NC}"
+        echo "3. Start using OpenCode agents:"
+    else
+        echo "2. Start using OpenCode agents:"
+    fi
     echo "   ${CYAN}opencode${NC}"
     echo ""
     
+    # Show installation location info
+    print_info "Installation directory: ${CYAN}${INSTALL_DIR}${NC}"
+    
     if [ -d "${INSTALL_DIR}.backup."* ] 2>/dev/null; then
-        print_info "Backup created - you can restore files from .opencode.backup.* if needed"
+        print_info "Backup created - you can restore files from ${INSTALL_DIR}.backup.* if needed"
     fi
     
     print_info "Documentation: ${REPO_URL}"
@@ -832,60 +1014,130 @@ trap 'cleanup_and_exit 1' INT TERM
 
 main() {
     # Parse command line arguments
-    case "${1:-}" in
-        essential|--essential)
-            INSTALL_MODE="profile"
-            PROFILE="essential"
-            NON_INTERACTIVE=true
-            ;;
-        developer|--developer)
-            INSTALL_MODE="profile"
-            PROFILE="developer"
-            NON_INTERACTIVE=true
-            ;;
-        business|--business)
-            INSTALL_MODE="profile"
-            PROFILE="business"
-            NON_INTERACTIVE=true
-            ;;
-        full|--full)
-            INSTALL_MODE="profile"
-            PROFILE="full"
-            NON_INTERACTIVE=true
-            ;;
-        advanced|--advanced)
-            INSTALL_MODE="profile"
-            PROFILE="advanced"
-            NON_INTERACTIVE=true
-            ;;
-        list|--list)
-            check_dependencies
-            fetch_registry
-            list_components
-            cleanup_and_exit 0
-            ;;
-        --help|-h|help)
-            print_header
-            echo "Usage: $0 [OPTIONS]"
-            echo ""
-            echo "Options:"
-            echo "  essential, --essential Install essential profile (minimal)"
-            echo "  developer, --developer Install developer profile (code-focused)"
-            echo "  business, --business   Install business profile (content-focused)"
-            echo "  full, --full           Install full profile (everything except system-builder)"
-            echo "  advanced, --advanced   Install advanced profile (complete system)"
-            echo "  list, --list           List all available components"
-            echo "  help, --help, -h       Show this help message"
-            echo ""
-            echo "Examples:"
-            echo "  $0 essential"
-            echo "  $0 --developer"
-            echo "  curl -fsSL https://raw.githubusercontent.com/darrenhinde/OpenAgents/main/install.sh | bash -s essential"
-            echo ""
-            echo "Without options, runs in interactive mode"
-            exit 0
-            ;;
-    esac
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --install-dir=*)
+                CUSTOM_INSTALL_DIR="${1#*=}"
+                shift
+                ;;
+            --install-dir)
+                if [ -n "$2" ] && [ "${2:0:1}" != "-" ]; then
+                    CUSTOM_INSTALL_DIR="$2"
+                    shift 2
+                else
+                    echo "Error: --install-dir requires a path argument"
+                    exit 1
+                fi
+                ;;
+            essential|--essential)
+                INSTALL_MODE="profile"
+                PROFILE="essential"
+                NON_INTERACTIVE=true
+                shift
+                ;;
+            developer|--developer)
+                INSTALL_MODE="profile"
+                PROFILE="developer"
+                NON_INTERACTIVE=true
+                shift
+                ;;
+            business|--business)
+                INSTALL_MODE="profile"
+                PROFILE="business"
+                NON_INTERACTIVE=true
+                shift
+                ;;
+            full|--full)
+                INSTALL_MODE="profile"
+                PROFILE="full"
+                NON_INTERACTIVE=true
+                shift
+                ;;
+            advanced|--advanced)
+                INSTALL_MODE="profile"
+                PROFILE="advanced"
+                NON_INTERACTIVE=true
+                shift
+                ;;
+            list|--list)
+                check_dependencies
+                fetch_registry
+                list_components
+                cleanup_and_exit 0
+                ;;
+            --help|-h|help)
+                print_header
+                echo "Usage: $0 [PROFILE] [OPTIONS]"
+                echo ""
+                echo -e "${BOLD}Profiles:${NC}"
+                echo "  essential, --essential    Minimal setup with core agents"
+                echo "  developer, --developer    Code-focused development tools"
+                echo "  business, --business      Content and business-focused tools"
+                echo "  full, --full              Everything except system-builder"
+                echo "  advanced, --advanced      Complete system with all components"
+                echo ""
+                echo -e "${BOLD}Options:${NC}"
+                echo "  --install-dir PATH        Custom installation directory"
+                echo "                            (default: .opencode)"
+                echo "  list, --list              List all available components"
+                echo "  help, --help, -h          Show this help message"
+                echo ""
+                echo -e "${BOLD}Environment Variables:${NC}"
+                echo "  OPENCODE_INSTALL_DIR      Installation directory"
+                echo "  OPENCODE_BRANCH           Git branch to install from (default: main)"
+                echo ""
+                echo -e "${BOLD}Examples:${NC}"
+                echo ""
+                echo "  ${CYAN}# Interactive mode (choose location and components)${NC}"
+                echo "  $0"
+                echo ""
+                echo "  ${CYAN}# Quick install with default location (.opencode/)${NC}"
+                echo "  $0 developer"
+                echo ""
+                echo "  ${CYAN}# Install to global location (Linux/macOS)${NC}"
+                echo "  $0 developer --install-dir ~/.config/opencode"
+                echo ""
+                echo "  ${CYAN}# Install to global location (Windows Git Bash)${NC}"
+                echo "  $0 developer --install-dir ~/.config/opencode"
+                echo ""
+                echo "  ${CYAN}# Install to custom location${NC}"
+                echo "  $0 essential --install-dir ~/my-agents"
+                echo ""
+                echo "  ${CYAN}# Using environment variable${NC}"
+                echo "  export OPENCODE_INSTALL_DIR=~/.config/opencode"
+                echo "  $0 developer"
+                echo ""
+                echo "  ${CYAN}# Install from URL (non-interactive)${NC}"
+                echo "  curl -fsSL https://raw.githubusercontent.com/darrenhinde/OpenAgents/main/install.sh | bash -s developer"
+                echo ""
+                echo -e "${BOLD}Platform Support:${NC}"
+                echo "  ✓ Linux (bash 3.2+)"
+                echo "  ✓ macOS (bash 3.2+)"
+                echo "  ✓ Windows (Git Bash, WSL)"
+                echo ""
+                exit 0
+                ;;
+            *)
+                echo "Unknown option: $1"
+                echo "Run '$0 --help' for usage information"
+                exit 1
+                ;;
+        esac
+    done
+    
+    # Apply custom install directory if specified (CLI arg overrides env var)
+    if [ -n "$CUSTOM_INSTALL_DIR" ]; then
+        local normalized_path=$(normalize_and_validate_path "$CUSTOM_INSTALL_DIR")
+        if [ $? -eq 0 ]; then
+            INSTALL_DIR="$normalized_path"
+            if ! validate_install_path "$INSTALL_DIR"; then
+                print_warning "Installation path may have issues, but continuing..."
+            fi
+        else
+            print_error "Invalid installation directory: $CUSTOM_INSTALL_DIR"
+            exit 1
+        fi
+    fi
     
     check_bash_version
     check_dependencies
@@ -901,7 +1153,8 @@ main() {
         done < "$temp_file"
         show_installation_preview
     else
-        # Interactive mode
+        # Interactive mode - show location menu first
+        show_install_location_menu
         show_main_menu
         
         if [ "$INSTALL_MODE" = "profile" ]; then
