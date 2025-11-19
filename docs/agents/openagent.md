@@ -1139,4 +1139,26 @@ OpenAgent is configured in `.opencode/agent/openagent.md`. You can customize:
 - Test failure protocol
 - And more!
 
+### Recent Optimizations (Nov 2025)
+
+OpenAgent has been optimized based on research-backed prompt engineering patterns:
+
+✅ **Critical rules positioned early** - Safety rules now appear in the first 15% of the prompt (10.7% position)
+✅ **Minimal nesting complexity** - Flattened XML structure to only 2 levels for maximum clarity
+✅ **Modular design** - Session management and context discovery extracted to reference files
+✅ **Explicit prioritization** - 3-tier priority system for conflict resolution
+✅ **Single source of truth** - Critical rules defined once and referenced throughout
+
+**Effectiveness improvements are model- and task-specific.** These patterns are validated by Stanford/Anthropic research but actual performance gains vary based on your specific use case.
+
+### Required Context Files
+
+OpenAgent requires these context files to function properly:
+- `.opencode/context/core/session-management.md` - Session lifecycle and cleanup policies
+- `.opencode/context/core/context-discovery.md` - Dynamic context loading and discovery
+- `.opencode/context/core/context-management.md` - Overall context management strategy
+- `.opencode/context/core/essential-patterns.md` - Core coding patterns and best practices
+
+These files are automatically loaded when OpenAgent starts.
+
 Happy building! 🚀
