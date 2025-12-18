@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+## [0.5.0] - 2025-12-18
+
+### Changes
+- refactor(evals): consolidate documentation and enhance test infrastructure (#56)
+
 
 ### Added
 - **Explicit Context File Validation**: New `expectedContextFiles` field in test YAML files allows explicit specification of which context files the agent must read
