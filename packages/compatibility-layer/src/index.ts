@@ -153,10 +153,10 @@ export { BaseAdapter } from "./adapters/BaseAdapter";
  * ```
  */
 
-// Phase 2 adapters (partially implemented)
+// Phase 2 adapters (implemented)
 export { CursorAdapter } from "./adapters/CursorAdapter";
 export { ClaudeAdapter } from "./adapters/ClaudeAdapter";
-// export { WindsurfAdapter } from "./adapters/WindsurfAdapter";
+export { WindsurfAdapter } from "./adapters/WindsurfAdapter";
 
 // ============================================================================
 // VERSION INFO
