@@ -153,9 +153,9 @@ export { BaseAdapter } from "./adapters/BaseAdapter";
  * ```
  */
 
-// TODO: Uncomment when Phase 2 adapters are implemented
+// Phase 2 adapters (partially implemented)
 // export { CursorAdapter } from "./adapters/CursorAdapter";
-// export { ClaudeAdapter } from "./adapters/ClaudeAdapter";
+export { ClaudeAdapter } from "./adapters/ClaudeAdapter";
 // export { WindsurfAdapter } from "./adapters/WindsurfAdapter";
 
 // ============================================================================
