@@ -40,6 +40,8 @@ import {
   logError,
 } from "./utils.js";
 import { createConvertAction } from "./commands/convert.js";
+import { createValidateAction } from "./commands/validate.js";
+import { createInfoAction } from "./commands/info.js";
 
 // Read version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -127,20 +129,10 @@ const registerValidateCommand = (program: Command): void => {
     .addOption(
       new Option("-t, --target <format>", "target format to validate against")
         .choices(PLATFORMS as unknown as string[])
+        .makeOptionMandatory()
     )
     .option("--strict", "enable strict validation mode")
-    .action((input, options, command) => {
-      const globalOpts = command.optsWithGlobals() as GlobalOptions;
-      const config = createLoggerConfig(globalOpts);
-
-      logVerbose(config, `Validating: ${input}`);
-      if (options.target) {
-        logVerbose(config, `Target format: ${options.target}`);
-      }
-
-      // Placeholder - will be implemented in Subtask 22
-      logInfo(config, "Validate command not yet implemented (Subtask 22)");
-    });
+    .action(createValidateAction());
 };
 
 /**
@@ -187,20 +179,7 @@ const registerInfoCommand = (program: Command): void => {
       new Option("-c, --compare <platform>", "compare with another platform")
         .choices(PLATFORMS as unknown as string[])
     )
-    .action((platform, options, command) => {
-      const globalOpts = command.optsWithGlobals() as GlobalOptions;
-      const config = createLoggerConfig(globalOpts);
-
-      if (platform) {
-        logVerbose(config, `Showing info for: ${platform}`);
-      }
-      if (options.compare) {
-        logVerbose(config, `Comparing with: ${options.compare}`);
-      }
-
-      // Placeholder - will be implemented in Subtask 24
-      logInfo(config, "Info command not yet implemented (Subtask 24)");
-    });
+    .action(createInfoAction());
 };
 
 // ============================================================================
