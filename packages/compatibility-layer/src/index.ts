@@ -159,6 +159,173 @@ export { ClaudeAdapter } from "./adapters/ClaudeAdapter";
 export { WindsurfAdapter } from "./adapters/WindsurfAdapter";
 
 // ============================================================================
+// MAPPERS - Feature Translation (Phase 3)
+// ============================================================================
+
+/**
+ * ToolMapper for translating tool names between platforms.
+ * 
+ * @example
+ * ```typescript
+ * import { mapToolFromOAC, mapToolToOAC } from '@openagents-control/compatibility-layer';
+ * 
+ * mapToolFromOAC('bash', 'cursor'); // => { name: 'terminal', exact: true }
+ * ```
+ */
+export {
+  mapToolToOAC,
+  mapToolFromOAC,
+  mapToolAccessFromOAC,
+  mapToolAccessToOAC,
+  getSupportedTools,
+  getUnsupportedTools,
+  isToolSupported,
+  type ToolPlatform,
+  type ToolMappingConfig,
+  type ToolMappingResult,
+} from "./mappers/ToolMapper";
+
+/**
+ * PermissionMapper for translating between granular and binary permissions.
+ * 
+ * @example
+ * ```typescript
+ * import { mapPermissionsFromOAC } from '@openagents-control/compatibility-layer';
+ * 
+ * mapPermissionsFromOAC({ bash: { "*": "allow" } }, 'claude');
+ * // => { permissions: { bash: true }, warnings: [...] }
+ * ```
+ */
+export {
+  resolvePermissionRule,
+  isGranularRule,
+  mapPermissionsFromOAC,
+  mapPermissionsToOAC,
+  createGranularRule,
+  extractPatterns,
+  mergePermissionRules,
+  hasGranularPermissions,
+  hasAskPermissions,
+  analyzePermissionDegradation,
+  type PermissionPlatform,
+  type BinaryPermissions,
+  type PermissionMappingResult,
+  type DegradationStrategy,
+} from "./mappers/PermissionMapper";
+
+/**
+ * ModelMapper for translating AI model identifiers.
+ * 
+ * @example
+ * ```typescript
+ * import { mapModelFromOAC, getModelsForPlatform } from '@openagents-control/compatibility-layer';
+ * 
+ * mapModelFromOAC('claude-sonnet-4', 'cursor');
+ * // => { id: 'claude-sonnet-4', exact: true }
+ * ```
+ */
+export {
+  mapModelFromOAC,
+  mapModelToOAC,
+  getModelFamily,
+  getModelInfo,
+  getAllModels,
+  getModelsForPlatform,
+  isModelAvailable,
+  getDefaultModel,
+  type ModelPlatform,
+  type ModelMappingResult,
+  type ModelFamily,
+  type ModelInfo,
+} from "./mappers/ModelMapper";
+
+/**
+ * ContextMapper for translating context file paths.
+ * 
+ * @example
+ * ```typescript
+ * import { mapContextPathFromOAC } from '@openagents-control/compatibility-layer';
+ * 
+ * mapContextPathFromOAC('.opencode/context/core/standards.md', 'claude');
+ * // => { path: '.claude/skills/core-standards.md', exact: true }
+ * ```
+ */
+export {
+  mapContextPathFromOAC,
+  mapContextPathToOAC,
+  mapContextReferenceFromOAC,
+  mapContextReferencesFromOAC,
+  mapSkillsToClaudeFormat,
+  mapSkillsFromClaudeFormat,
+  getContextBaseDir,
+  supportsExternalContext,
+  supportsContextSubdirs,
+  supportsContextPriority,
+  createContextReference,
+  normalizeContextPath,
+  getRelativeContextPath,
+  type ContextPlatform,
+  type ContextMappingResult,
+} from "./mappers/ContextMapper";
+
+// ============================================================================
+// CORE - Capability Matrix & Translation Engine (Phase 3)
+// ============================================================================
+
+/**
+ * CapabilityMatrix for feature compatibility analysis.
+ * 
+ * @example
+ * ```typescript
+ * import { analyzeCompatibility, getToolCapabilities } from '@openagents-control/compatibility-layer';
+ * 
+ * const result = analyzeCompatibility(agent, 'cursor');
+ * // => { compatible: false, warnings: [...], blockers: [...] }
+ * ```
+ */
+export {
+  getCapabilityMatrix,
+  getFeaturesByCategory,
+  getFeatureSupport,
+  isFeatureSupported,
+  analyzeCompatibility,
+  getToolCapabilities,
+  comparePlatforms,
+  getConversionSummary,
+  type Platform,
+  type FeatureCategory,
+  type SupportLevel,
+  type FeatureDefinition,
+  type CompatibilityResult,
+} from "./core/CapabilityMatrix";
+
+/**
+ * TranslationEngine for orchestrating complete agent translation.
+ * 
+ * @example
+ * ```typescript
+ * import { TranslationEngine, translate } from '@openagents-control/compatibility-layer';
+ * 
+ * // Using the engine
+ * const engine = new TranslationEngine();
+ * const result = engine.translate(agent, 'cursor');
+ * 
+ * // Quick translate
+ * const result = translate(agent, 'cursor');
+ * ```
+ */
+export {
+  TranslationEngine,
+  createTranslationEngine,
+  translate,
+  previewTranslation,
+  type TranslationTarget,
+  type TranslationOptions,
+  type TranslationResult,
+  type ReverseTranslationResult,
+} from "./core/TranslationEngine";
+
+// ============================================================================
 // VERSION INFO
 // ============================================================================
 
