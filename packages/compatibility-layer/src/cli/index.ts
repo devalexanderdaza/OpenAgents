@@ -30,18 +30,15 @@ import { dirname, join } from "path";
 import {
   OUTPUT_FORMATS,
   PLATFORMS,
-  type GlobalOptions,
   type OutputFormat,
 } from "./types.js";
 import {
-  createLoggerConfig,
-  logInfo,
-  logVerbose,
   logError,
 } from "./utils.js";
 import { createConvertAction } from "./commands/convert.js";
 import { createValidateAction } from "./commands/validate.js";
 import { createInfoAction } from "./commands/info.js";
+import { createMigrateAction } from "./commands/migrate.js";
 
 // Read version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -151,19 +148,7 @@ const registerMigrateCommand = (program: Command): void => {
     .option("-o, --out-dir <path>", "output directory path")
     .option("--dry-run", "simulate migration without making changes")
     .option("--force", "overwrite existing files")
-    .action((source, options, command) => {
-      const globalOpts = command.optsWithGlobals() as GlobalOptions;
-      const config = createLoggerConfig(globalOpts);
-
-      logVerbose(config, `Migrating: ${source}`);
-      logVerbose(config, `Target format: ${options.format}`);
-      if (options.dryRun) {
-        logVerbose(config, "Dry run mode enabled");
-      }
-
-      // Placeholder - will be implemented in Subtask 23
-      logInfo(config, "Migrate command not yet implemented (Subtask 23)");
-    });
+    .action(createMigrateAction());
 };
 
 /**
