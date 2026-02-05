@@ -2,7 +2,7 @@
 
 **Purpose**: Context files specific to the OpenAgents Control repository
 
-**Last Updated**: 2026-01-31
+**Last Updated**: 2026-02-04
 
 ---
 
@@ -11,10 +11,10 @@
 | Function | Files | Purpose |
 |----------|-------|---------|
 | **Standards** | 2 files | Agent creation standards |
-| **Concepts** | 2 files | Core ideas and principles |
-| **Examples** | 1 file | Working code samples |
-| **Guides** | 10 files | Step-by-step workflows |
-| **Lookup** | 4 files | Quick reference tables |
+| **Concepts** | 3 files | Core ideas and principles |
+| **Examples** | 3 files | Working code samples |
+| **Guides** | 11 files | Step-by-step workflows |
+| **Lookup** | 6 files | Quick reference tables |
 | **Errors** | 1 file | Common issues + solutions |
 
 ---
@@ -34,9 +34,10 @@
 
 | File | Topic | Priority |
 |------|-------|----------|
+| `concepts/compatibility-layer.md` | Adapter pattern for AI coding tools | ⭐⭐⭐⭐⭐ |
 | `concepts/subagent-testing-modes.md` | Standalone vs delegation testing | ⭐⭐⭐⭐⭐ |
 
-**When to read**: Before testing any subagent
+**When to read**: Before testing any subagent or working with tool adapters
 
 ---
 
@@ -44,9 +45,11 @@
 
 | File | Topic | Priority |
 |------|-------|----------|
+| `examples/baseadapter-pattern.md` | Template Method pattern for tool adapters | ⭐⭐⭐⭐⭐ |
+| `examples/zod-schema-migration.md` | Migrating TypeScript to Zod schemas | ⭐⭐⭐⭐ |
 | `examples/subagent-prompt-structure.md` | Optimized subagent prompt template | ⭐⭐⭐⭐ |
 
-**When to read**: When creating or optimizing subagent prompts
+**When to read**: When creating adapters, schemas, or optimizing subagent prompts
 
 ---
 
@@ -54,6 +57,7 @@
 
 | File | Topic | Priority |
 |------|-------|----------|
+| `guides/compatibility-layer-workflow.md` | Developing compatibility layer for AI tools | ⭐⭐⭐⭐⭐ |
 | `guides/testing-subagents.md` | How to test subagents standalone | ⭐⭐⭐⭐⭐ |
 | `guides/adding-agent.md` | How to add new agents | ⭐⭐⭐⭐ |
 | `guides/testing-agent.md` | How to test agents | ⭐⭐⭐⭐ |
@@ -73,11 +77,13 @@
 
 | File | Topic | Priority |
 |------|-------|----------|
+| `lookup/tool-feature-parity.md` | AI coding tool feature comparison | ⭐⭐⭐⭐⭐ |
+| `lookup/compatibility-layer-structure.md` | Compatibility package file structure | ⭐⭐⭐⭐⭐ |
 | `lookup/subagent-test-commands.md` | Subagent testing commands | ⭐⭐⭐⭐⭐ |
 | `lookup/file-locations.md` | Where files are located | ⭐⭐⭐⭐ |
 | `lookup/commands.md` | Available slash commands | ⭐⭐⭐ |
 
-**When to read**: Quick command lookups
+**When to read**: Quick command lookups and feature comparisons
 
 ---
 
