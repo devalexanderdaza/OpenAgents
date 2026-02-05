@@ -11,7 +11,9 @@
 This package provides bidirectional conversion between OpenAgents Control (OAC) agent format and various AI coding tools:
 
 - **Cursor IDE** - VSCode-based AI editor with `.cursorrules`
+  [![Cursor IDE](./docs/migration-guides/contextscout-cursor.png)](./docs/migration-guides/oac-to-cursor.md)
 - **Claude Code** - Anthropic's official CLI with `config.json` and `agents/*.md`
+  [![Claude Code](./docs/migration-guides/claude-code-validation.png)](./docs/migration-guides/oac-to-claude.md)
 - **Windsurf** - AI-powered development environment with JSON config
 
 ## Features
@@ -64,24 +66,24 @@ oac-compat info cursor --compare claude
 ### Programmatic Usage
 
 ```typescript
-import { 
-  loadAgent, 
+import {
+  loadAgent,
   getAdapter,
   translate,
-  analyzeCompatibility 
-} from '@openagents-control/compatibility-layer';
+  analyzeCompatibility,
+} from "@openagents-control/compatibility-layer";
 
 // Load an OAC agent
-const agent = await loadAgent('./agent.md');
+const agent = await loadAgent("./agent.md");
 
 // Check compatibility with target platform
-const compatibility = analyzeCompatibility(agent, 'cursor');
-console.log('Compatible:', compatibility.compatible);
-console.log('Warnings:', compatibility.warnings);
-console.log('Blockers:', compatibility.blockers);
+const compatibility = analyzeCompatibility(agent, "cursor");
+console.log("Compatible:", compatibility.compatible);
+console.log("Warnings:", compatibility.warnings);
+console.log("Blockers:", compatibility.blockers);
 
 // Convert to another format
-const adapter = getAdapter('claude');
+const adapter = getAdapter("claude");
 const result = await adapter.fromOAC(agent);
 
 if (result.success) {
@@ -92,7 +94,7 @@ if (result.success) {
 }
 
 // Or use the translate function for quick conversion
-const translated = translate(agent, 'cursor');
+const translated = translate(agent, "cursor");
 ```
 
 ## CLI Commands
@@ -151,15 +153,15 @@ Options:
 
 ## Feature Parity Matrix
 
-| Feature | OAC | Cursor | Claude | Windsurf |
-|---------|-----|--------|--------|----------|
-| **Config Format** | YAML+MD | Plain text | JSON | JSON |
-| **Multiple Agents** | ✅ | ❌ | ✅ | ✅ |
-| **Tool Permissions** | Granular | Binary | Binary | Binary |
-| **Temperature** | ✅ | ❌ | ❌ | ✅ |
-| **Skills/Contexts** | ✅ | ❌ | ✅ | ⚠️ |
-| **Hooks** | ✅ | ❌ | ✅ | ❌ |
-| **Model Selection** | ✅ | ✅ | ✅ | ✅ |
+| Feature              | OAC      | Cursor     | Claude | Windsurf |
+| -------------------- | -------- | ---------- | ------ | -------- |
+| **Config Format**    | YAML+MD  | Plain text | JSON   | JSON     |
+| **Multiple Agents**  | ✅       | ❌         | ✅     | ✅       |
+| **Tool Permissions** | Granular | Binary     | Binary | Binary   |
+| **Temperature**      | ✅       | ❌         | ❌     | ✅       |
+| **Skills/Contexts**  | ✅       | ❌         | ✅     | ⚠️       |
+| **Hooks**            | ✅       | ❌         | ✅     | ❌       |
+| **Model Selection**  | ✅       | ✅         | ✅     | ✅       |
 
 See [Feature Matrices](docs/feature-matrices.md) for detailed comparison.
 
@@ -176,26 +178,34 @@ See [Feature Matrices](docs/feature-matrices.md) for detailed comparison.
 ### Agent Loading
 
 ```typescript
-import { loadAgent, loadAgents, AgentLoader } from '@openagents-control/compatibility-layer';
+import {
+  loadAgent,
+  loadAgents,
+  AgentLoader,
+} from "@openagents-control/compatibility-layer";
 
 // Load single agent
-const agent = await loadAgent('./agent.md');
+const agent = await loadAgent("./agent.md");
 
 // Load all agents from directory
-const agents = await loadAgents('./agents/');
+const agents = await loadAgents("./agents/");
 
 // Using the loader class
 const loader = new AgentLoader();
-const agent = await loader.loadFromFile('./agent.md');
+const agent = await loader.loadFromFile("./agent.md");
 ```
 
 ### Adapter Registry
 
 ```typescript
-import { registry, getAdapter, listAdapters } from '@openagents-control/compatibility-layer';
+import {
+  registry,
+  getAdapter,
+  listAdapters,
+} from "@openagents-control/compatibility-layer";
 
 // Get adapter by name
-const adapter = getAdapter('cursor');
+const adapter = getAdapter("cursor");
 
 // List all adapters
 const names = listAdapters(); // ['cursor', 'claude', 'windsurf']
@@ -207,19 +217,23 @@ const capabilities = getAllCapabilities();
 ### Translation Engine
 
 ```typescript
-import { translate, previewTranslation, TranslationEngine } from '@openagents-control/compatibility-layer';
+import {
+  translate,
+  previewTranslation,
+  TranslationEngine,
+} from "@openagents-control/compatibility-layer";
 
 // Quick translate
-const result = translate(agent, 'cursor');
+const result = translate(agent, "cursor");
 
 // Preview without converting
-const preview = previewTranslation(agent, 'claude');
-console.log('Features lost:', preview.featuresLost);
-console.log('Features gained:', preview.featuresGained);
+const preview = previewTranslation(agent, "claude");
+console.log("Features lost:", preview.featuresLost);
+console.log("Features gained:", preview.featuresGained);
 
 // Using the engine for more control
 const engine = new TranslationEngine();
-const result = engine.translate(agent, 'windsurf', {
+const result = engine.translate(agent, "windsurf", {
   preserveComments: true,
   strictMode: false,
 });
@@ -233,16 +247,16 @@ import {
   mapModelFromOAC,
   mapPermissionsFromOAC,
   mapContextPathFromOAC,
-} from '@openagents-control/compatibility-layer';
+} from "@openagents-control/compatibility-layer";
 
 // Map tool names
-mapToolFromOAC('bash', 'cursor'); // { name: 'terminal', exact: true }
+mapToolFromOAC("bash", "cursor"); // { name: 'terminal', exact: true }
 
 // Map model identifiers
-mapModelFromOAC('claude-sonnet-4', 'cursor'); // { id: 'claude-3-sonnet', exact: true }
+mapModelFromOAC("claude-sonnet-4", "cursor"); // { id: 'claude-3-sonnet', exact: true }
 
 // Map permissions
-mapPermissionsFromOAC({ bash: { "*": "allow" } }, 'claude');
+mapPermissionsFromOAC({ bash: { "*": "allow" } }, "claude");
 // { permissions: { bash: true }, warnings: [...] }
 ```
 
@@ -304,12 +318,17 @@ npm run lint:fix
 ## Creating Custom Adapters
 
 ```typescript
-import { BaseAdapter, OpenAgent, ConversionResult, ToolCapabilities } from '@openagents-control/compatibility-layer';
+import {
+  BaseAdapter,
+  OpenAgent,
+  ConversionResult,
+  ToolCapabilities,
+} from "@openagents-control/compatibility-layer";
 
 class MyToolAdapter extends BaseAdapter {
-  readonly name = 'my-tool';
-  readonly displayName = 'My Tool';
-  readonly version = '1.0.0';
+  readonly name = "my-tool";
+  readonly displayName = "My Tool";
+  readonly version = "1.0.0";
 
   getCapabilities(): ToolCapabilities {
     return {
@@ -317,7 +336,7 @@ class MyToolAdapter extends BaseAdapter {
       supportsSkills: false,
       supportsHooks: false,
       supportsGranularPermissions: false,
-      configFormat: 'json',
+      configFormat: "json",
     };
   }
 
@@ -329,14 +348,14 @@ class MyToolAdapter extends BaseAdapter {
     // Convert OpenAgent to your format
     return {
       success: true,
-      configs: [{ fileName: 'config.json', content: '...', encoding: 'utf-8' }],
+      configs: [{ fileName: "config.json", content: "...", encoding: "utf-8" }],
       warnings: [],
     };
   }
 }
 
 // Register the adapter
-import { registry } from '@openagents-control/compatibility-layer';
+import { registry } from "@openagents-control/compatibility-layer";
 registry.register(new MyToolAdapter());
 ```
 
