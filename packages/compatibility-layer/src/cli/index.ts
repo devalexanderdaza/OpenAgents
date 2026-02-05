@@ -206,4 +206,4 @@ Examples:
 };
 
 // Run CLI
-main();
+void main();

@@ -226,7 +226,7 @@ export class AgentLoader {
    * @param filePath - Path to agent markdown file
    * @returns Parsed and validated OpenAgent
    */
-  async loadFromFile(filePath: string): Promise<OpenAgent> {
+  loadFromFile(filePath: string): Promise<OpenAgent> {
     let content: string;
 
     try {
@@ -286,12 +286,12 @@ export class AgentLoader {
 
     // Final validation
     try {
-      return OpenAgentSchema.parse(agent);
+      return Promise.resolve(OpenAgentSchema.parse(agent));
     } catch (error) {
       if (error instanceof ZodError) {
-        throw new ValidationError(filePath, error);
+        return Promise.reject(new ValidationError(filePath, error));
       }
-      throw error;
+      return Promise.reject(error);
     }
   }
 

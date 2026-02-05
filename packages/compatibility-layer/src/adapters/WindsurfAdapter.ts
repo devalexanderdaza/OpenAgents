@@ -32,6 +32,13 @@ export class WindsurfAdapter extends BaseAdapter {
     super();
   }
 
+  /**
+   * Get the config path for Windsurf.
+   */
+  getConfigPath(): string {
+    return ".windsurf/";
+  }
+
   // ============================================================================
   // CONVERSION METHODS
   // ============================================================================
@@ -46,10 +53,10 @@ export class WindsurfAdapter extends BaseAdapter {
    * @param source - Windsurf JSON config content
    * @returns OpenAgent object
    */
-  async toOAC(source: string): Promise<OpenAgent> {
+  toOAC(source: string): Promise<OpenAgent> {
     const config = this.safeParseJSON(source, "windsurf-config.json");
     if (!config || typeof config !== "object") {
-      throw new Error("Invalid Windsurf config format");
+      return Promise.reject(new Error("Invalid Windsurf config format"));
     }
 
     const windsurfConfig = config as Record<string, unknown>;
@@ -72,16 +79,21 @@ export class WindsurfAdapter extends BaseAdapter {
       );
     }
 
-    return {
+    // Validate category is one of the valid AgentCategory values
+    const validCategories = ["core", "development", "content", "data", "product", "learning", "meta", "specialist"] as const;
+    const categoryStr = String(windsurfConfig.category || "core");
+    const category = validCategories.includes(categoryStr as never) ? (categoryStr as typeof validCategories[number]) : "core";
+
+    return Promise.resolve({
       frontmatter,
       metadata: {
         name: frontmatter.name,
-        category: windsurfConfig.category as any || "core",
+        category,
         type: frontmatter.mode === "subagent" ? "subagent" : "agent",
       },
       systemPrompt: String(windsurfConfig.systemPrompt || windsurfConfig.prompt || ""),
       contexts: this.parseWindsurfContexts(windsurfConfig.contexts),
-    };
+    });
   }
 
   /**
@@ -94,7 +106,7 @@ export class WindsurfAdapter extends BaseAdapter {
    * @param agent - OpenAgent to convert
    * @returns ConversionResult with generated files and warnings
    */
-  async fromOAC(agent: OpenAgent): Promise<ConversionResult> {
+  fromOAC(agent: OpenAgent): Promise<ConversionResult> {
     const warnings: string[] = [];
     const configs: ToolConfig[] = [];
 
@@ -169,14 +181,7 @@ export class WindsurfAdapter extends BaseAdapter {
       );
     }
 
-    return this.createSuccessResult(configs, warnings);
-  }
-
-  /**
-   * Get the configuration path for Windsurf.
-   */
-  getConfigPath(): string {
-    return ".windsurf/";
+    return Promise.resolve(this.createSuccessResult(configs, warnings));
   }
 
   /**

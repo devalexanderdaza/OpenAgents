@@ -465,8 +465,9 @@ export const executeInfo = async (
     // Handle comparison
     if (options.compare) {
       if (!isValidPlatform(options.compare)) {
+        const comparePlatform = String(options.compare);
         return errorResult(
-          `Unknown platform for comparison: ${options.compare}. Valid platforms: ${PLATFORMS.join(", ")}`
+          `Unknown platform for comparison: ${comparePlatform}. Valid platforms: ${PLATFORMS.join(", ")}`
         );
       }
 
@@ -497,13 +498,17 @@ export const executeInfo = async (
 /**
  * Create the info command action handler
  */
-export const createInfoAction = () => {
+export const createInfoAction = (): ((
+  platform: string | undefined,
+  options: InfoCommandOptions,
+  command: Command
+  ) => Promise<void>) => {
   return async (
     platform: string | undefined,
     options: InfoCommandOptions,
     command: Command
   ): Promise<void> => {
-    const globalOptions = command.optsWithGlobals() as GlobalOptions;
+    const globalOptions = command.optsWithGlobals() as unknown as GlobalOptions;
     const result = await executeInfo(platform, options, globalOptions);
 
     // Print JSON output if requested

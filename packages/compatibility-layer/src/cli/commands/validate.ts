@@ -402,13 +402,17 @@ export const getValidationExitCode = (
 /**
  * Create the validate command action handler
  */
-export const createValidateAction = () => {
+export const createValidateAction = (): ((
+  input: string,
+  options: ValidateCommandOptions,
+  command: Command
+) => Promise<void>) => {
   return async (
     input: string,
     options: ValidateCommandOptions,
     command: Command
   ): Promise<void> => {
-    const globalOptions = command.optsWithGlobals() as GlobalOptions;
+    const globalOptions = command.optsWithGlobals() as unknown as GlobalOptions;
     const result = await executeValidate(input, options, globalOptions);
 
     // Print JSON output if requested

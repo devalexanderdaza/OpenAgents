@@ -167,7 +167,7 @@ export abstract class BaseAdapter {
    * @param filename - Optional filename for error messages
    * @returns Parsed object or null on error
    */
-  protected safeParseJSON(content: string, filename?: string): unknown | null {
+  protected safeParseJSON(content: string, filename?: string): unknown {
     try {
       return JSON.parse(content);
     } catch (error) {

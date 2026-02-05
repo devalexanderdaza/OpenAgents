@@ -111,13 +111,20 @@ interface DiscoveredFile {
 // FORMAT DETECTION (reused from convert.ts pattern)
 // ============================================================================
 
+interface ParsedConfig {
+  cascadeConfig?: unknown;
+  creativity?: unknown;
+  permissions?: unknown;
+  skills?: unknown;
+}
+
 /**
  * Detect the format of an input file based on path and content
  */
-const detectInputFormat = async (
+const detectInputFormat = (
   filePath: string,
   content: string
-): Promise<FormatDetection> => {
+): FormatDetection => {
   const fileName = basename(filePath).toLowerCase();
   const ext = extname(filePath).toLowerCase();
 
@@ -156,7 +163,7 @@ const detectInputFormat = async (
 
   if (ext === ".json") {
     try {
-      const parsed = JSON.parse(content);
+      const parsed = JSON.parse(content) as ParsedConfig;
       if (parsed.cascadeConfig || parsed.creativity !== undefined) {
         return { format: "windsurf", confidence: "high", reason: "Windsurf JSON structure" };
       }
@@ -213,24 +220,24 @@ const discoverAgentFiles = async (
   const scanDirectory = async (currentPath: string): Promise<void> => {
     const entries = await readdir(currentPath, { withFileTypes: true });
     
-    for (const entry of entries) {
-      const fullPath = join(currentPath, entry.name);
-      
-      // Skip hidden directories (except .opencode, .claude, .windsurf)
-      if (entry.isDirectory()) {
-        const dirName = entry.name.toLowerCase();
-        if (dirName.startsWith(".") && 
-            !["opencode", "claude", "windsurf"].some(d => dirName.includes(d))) {
-          continue;
-        }
-        await scanDirectory(fullPath);
-      } else if (entry.isFile() && isAgentFile(entry.name)) {
-        try {
-          const content = await readFile(fullPath, "utf-8");
-          const detectedFormat = await detectInputFormat(fullPath, content);
-          
-          discovered.push({
-            path: fullPath,
+     for (const entry of entries) {
+       const fullPath = join(currentPath, entry.name);
+       
+       // Skip hidden directories (except .opencode, .claude, .windsurf)
+       if (entry.isDirectory()) {
+         const dirName = entry.name.toLowerCase();
+         if (dirName.startsWith(".") && 
+             !["opencode", "claude", "windsurf"].some(d => dirName.includes(d))) {
+           continue;
+         }
+         await scanDirectory(fullPath);
+       } else if (entry.isFile() && isAgentFile(entry.name)) {
+         try {
+           const content = await readFile(fullPath, "utf-8");
+           const detectedFormat = detectInputFormat(fullPath, content);
+           
+           discovered.push({
+             path: fullPath,
             relativePath: relative(sourceDir, fullPath),
             detectedFormat,
           });
@@ -330,10 +337,11 @@ const serializeOACAgent = (agent: OpenAgent): string => {
   if (fm.tools) {
     lines.push("tools:");
     for (const [tool, access] of Object.entries(fm.tools)) {
-      if (typeof access === "boolean") {
-        lines.push(`  ${tool}: ${access}`);
+      const accessValue = access as boolean | string;
+      if (typeof accessValue === "boolean") {
+        lines.push(`  ${tool}: ${String(accessValue)}`);
       } else {
-        lines.push(`  ${tool}: "${access}"`);
+        lines.push(`  ${tool}: "${String(accessValue)}"`);
       }
     }
   }
@@ -701,19 +709,23 @@ export const executeMigrate = async (
 /**
  * Create the migrate command action handler
  */
-export const createMigrateAction = () => {
+export const createMigrateAction = (): ((
+  source: string,
+  options: MigrateCommandOptions,
+  command: Command
+) => Promise<void>) => {
   return async (
     source: string,
     options: MigrateCommandOptions,
     command: Command
   ): Promise<void> => {
-    const globalOptions = command.optsWithGlobals() as GlobalOptions;
+    const globalOptions = command.optsWithGlobals() as unknown as GlobalOptions;
     const result = await executeMigrate(source, options, globalOptions);
-    
+
     if (globalOptions.outputFormat === "json") {
       printOutput(createLoggerConfig(globalOptions), result);
     }
-    
+
     if (!result.success) {
       process.exit(1);
     }

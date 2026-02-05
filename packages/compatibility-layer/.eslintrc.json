@@ -15,10 +15,11 @@
     "@typescript-eslint/explicit-function-return-type": "warn",
     "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
     "@typescript-eslint/no-explicit-any": "warn",
-    "no-console": ["warn", { "allow": ["warn", "error"] }]
+    "no-console": ["warn", { "allow": ["warn", "error", "log"] }]
   },
   "env": {
     "node": true,
     "es2022": true
-  }
+  },
+  "ignorePatterns": ["**/__tests__/**", "**/*.test.ts", "**/*.spec.ts"]
 }

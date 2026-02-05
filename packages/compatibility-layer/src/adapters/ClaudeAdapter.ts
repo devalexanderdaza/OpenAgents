@@ -43,14 +43,14 @@ export class ClaudeAdapter extends BaseAdapter {
    * @param source - Claude config.json or agent.md content
    * @returns OpenAgent object
    */
-  async toOAC(source: string): Promise<OpenAgent> {
+  toOAC(source: string): Promise<OpenAgent> {
     // Try parsing as JSON first (config.json)
     if (source.trim().startsWith("{")) {
-      return this.parseClaudeConfig(source);
+      return Promise.resolve(this.parseClaudeConfig(source));
     }
 
     // Otherwise, parse as markdown with frontmatter (agent.md)
-    return this.parseClaudeAgent(source);
+    return Promise.resolve(this.parseClaudeAgent(source));
   }
 
   /**
@@ -64,7 +64,7 @@ export class ClaudeAdapter extends BaseAdapter {
    * @param agent - OpenAgent to convert
    * @returns ConversionResult with generated files and warnings
    */
-  async fromOAC(agent: OpenAgent): Promise<ConversionResult> {
+  fromOAC(agent: OpenAgent): Promise<ConversionResult> {
     const warnings: string[] = [];
     const configs: ToolConfig[] = [];
 
@@ -112,7 +112,7 @@ export class ClaudeAdapter extends BaseAdapter {
       configs.push(...skillConfigs);
     }
 
-    return this.createSuccessResult(configs, warnings);
+    return Promise.resolve(this.createSuccessResult(configs, warnings));
   }
 
   /**
@@ -383,7 +383,7 @@ export class ClaudeAdapter extends BaseAdapter {
       if (Array.isArray(value)) {
         return `${key}: [${value.map((v) => `"${v}"`).join(", ")}]`;
       }
-      return `${key}: "${value}"`;
+      return `${key}: "${String(value)}"`;
     });
 
     return `---\n${yamlLines.join("\n")}\n---\n\n${agent.systemPrompt}`;

@@ -72,13 +72,20 @@ interface FormatDetection {
 // FORMAT DETECTION
 // ============================================================================
 
+interface ParsedConfig {
+  cascadeConfig?: unknown;
+  creativity?: unknown;
+  permissions?: unknown;
+  skills?: unknown;
+}
+
 /**
  * Detect the format of an input file based on path and content
  */
-const detectInputFormat = async (
+const detectInputFormat = (
   filePath: string,
   content: string
-): Promise<FormatDetection> => {
+): FormatDetection => {
   const fileName = basename(filePath).toLowerCase();
   const ext = extname(filePath).toLowerCase();
 
@@ -117,7 +124,7 @@ const detectInputFormat = async (
 
   if (ext === ".json") {
     try {
-      const parsed = JSON.parse(content);
+      const parsed = JSON.parse(content) as ParsedConfig;
       if (parsed.cascadeConfig || parsed.creativity !== undefined) {
         return { format: "windsurf", confidence: "high", reason: "Windsurf JSON structure" };
       }
@@ -221,10 +228,11 @@ const serializeOACAgent = (agent: OpenAgent): string => {
   if (fm.tools) {
     lines.push("tools:");
     for (const [tool, access] of Object.entries(fm.tools)) {
-      if (typeof access === "boolean") {
-        lines.push(`  ${tool}: ${access}`);
+      const accessValue = access as boolean | string;
+      if (typeof accessValue === "boolean") {
+        lines.push(`  ${tool}: ${String(accessValue)}`);
       } else {
-        lines.push(`  ${tool}: "${access}"`);
+        lines.push(`  ${tool}: "${String(accessValue)}"`);
       }
     }
   }
@@ -333,7 +341,7 @@ export const executeConvert = async (
       sourceFormat = options.from;
       logVerbose(config, `Using specified source format: ${sourceFormat}`);
     } else {
-      const detection = await detectInputFormat(input, content);
+      const detection = detectInputFormat(input, content);
       sourceFormat = detection.format;
       logVerbose(
         config,
@@ -404,13 +412,17 @@ export const executeConvert = async (
 /**
  * Create the convert command action handler
  */
-export const createConvertAction = () => {
+export const createConvertAction = (): ((
+  input: string,
+  options: ConvertCommandOptions,
+  command: Command
+) => Promise<void>) => {
   return async (
     input: string,
     options: ConvertCommandOptions,
     command: Command
   ): Promise<void> => {
-    const globalOptions = command.optsWithGlobals() as GlobalOptions;
+    const globalOptions = command.optsWithGlobals() as unknown as GlobalOptions;
     const result = await executeConvert(input, options, globalOptions);
 
     if (globalOptions.outputFormat === "json") {

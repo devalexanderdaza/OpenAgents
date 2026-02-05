@@ -45,7 +45,7 @@ export class CursorAdapter extends BaseAdapter {
    * @param source - .cursorrules file content
    * @returns OpenAgent object
    */
-  async toOAC(source: string): Promise<OpenAgent> {
+  toOAC(source: string): Promise<OpenAgent> {
     // Try parsing frontmatter
     const { frontmatter, body } = this.parseFrontmatter(source);
 
@@ -65,7 +65,7 @@ export class CursorAdapter extends BaseAdapter {
       agentFrontmatter.temperature = Number(frontmatter.temperature);
     }
 
-    return {
+    return Promise.resolve({
       frontmatter: agentFrontmatter,
       metadata: {
         name: agentFrontmatter.name,
@@ -74,7 +74,7 @@ export class CursorAdapter extends BaseAdapter {
       },
       systemPrompt: body.trim() || source.trim(),
       contexts: [],
-    };
+    });
   }
 
   /**
@@ -88,7 +88,7 @@ export class CursorAdapter extends BaseAdapter {
    * @param agent - OpenAgent to convert (or array of agents to merge)
    * @returns ConversionResult with .cursorrules file and warnings
    */
-  async fromOAC(agent: OpenAgent): Promise<ConversionResult> {
+  fromOAC(agent: OpenAgent): Promise<ConversionResult> {
     const warnings: string[] = [];
 
     // Validate conversion
@@ -143,7 +143,7 @@ export class CursorAdapter extends BaseAdapter {
     // Generate .cursorrules content
     const cursorRules = this.generateCursorRules(agent, warnings);
 
-    return this.createSuccessResult(
+    return Promise.resolve(this.createSuccessResult(
       [
         {
           fileName: ".cursorrules",
@@ -152,7 +152,7 @@ export class CursorAdapter extends BaseAdapter {
         },
       ],
       warnings
-    );
+    ));
   }
 
   /**
@@ -541,7 +541,7 @@ export class CursorAdapter extends BaseAdapter {
     // Use highest temperature if any
     const temps = agents
       .map((a) => a.frontmatter.temperature)
-      .filter((t) => t !== undefined) as number[];
+      .filter((t): t is number => t !== undefined);
     if (temps.length > 0) {
       merged.frontmatter.temperature = Math.max(...temps);
     }
