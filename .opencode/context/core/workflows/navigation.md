@@ -17,7 +17,15 @@
 | `external-libraries-faq.md` | Troubleshooting | ⭐⭐⭐ | Errors/questions |
 | `feature-breakdown.md` | Breaking down features | ⭐⭐⭐⭐ | 4+ files, complex tasks |
 | `session-management.md` | Managing sessions | ⭐⭐⭐ | Session cleanup |
-| `design-iteration.md` | Design iteration process | ⭐⭐⭐ | Design work |
+| `design-iteration-overview.md` | Design workflow overview | ⭐⭐⭐⭐ | Starting design work |
+| `design-iteration-plan-file.md` | Design plan template | ⭐⭐⭐⭐ | Creating design plan |
+| `design-iteration-stage-layout.md` | Stage 1: Layout | ⭐⭐⭐ | Layout design |
+| `design-iteration-stage-theme.md` | Stage 2: Theme | ⭐⭐⭐ | Theme design |
+| `design-iteration-stage-animation.md` | Stage 3: Animation | ⭐⭐⭐ | Animation design |
+| `design-iteration-stage-implementation.md` | Stage 4: Implementation | ⭐⭐⭐ | Implementation |
+| `design-iteration-visual-content.md` | Visual content generation | ⭐⭐ | Image generation |
+| `design-iteration-best-practices.md` | Best practices & troubleshooting | ⭐⭐⭐ | Quality check |
+| `design-iteration-plan-iterations.md` | Plan file iterations | ⭐⭐⭐ | Managing iterations |
 
 ---
 
