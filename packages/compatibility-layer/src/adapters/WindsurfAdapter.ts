@@ -1,11 +1,11 @@
-import { BaseAdapter } from "./BaseAdapter";
+import { BaseAdapter } from "./BaseAdapter.js";
 import type {
   OpenAgent,
   ConversionResult,
   ToolCapabilities,
   ToolConfig,
   AgentFrontmatter,
-} from "../types";
+} from "../types.js";
 
 /**
  * Windsurf adapter for converting between OpenAgents Control and Windsurf formats.
@@ -27,6 +27,10 @@ import type {
 export class WindsurfAdapter extends BaseAdapter {
   readonly name = "windsurf";
   readonly displayName = "Windsurf";
+
+  constructor() {
+    super();
+  }
 
   // ============================================================================
   // CONVERSION METHODS

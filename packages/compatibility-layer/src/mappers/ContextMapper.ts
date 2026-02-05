@@ -11,7 +11,7 @@
  * ```
  */
 
-import type { ContextReference, SkillReference } from "../types";
+import type { ContextReference, SkillReference } from "../types.js";
 
 // ============================================================================
 // Types

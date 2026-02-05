@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from "fs";
 import { join, extname, basename } from "path";
 import * as yaml from "js-yaml";
 import { ZodError } from "zod";
-import { OpenAgentSchema, AgentFrontmatterSchema, OpenAgent, AgentFrontmatter } from "../types";
+import { OpenAgentSchema, AgentFrontmatterSchema, OpenAgent, AgentFrontmatter } from "../types.js";
 
 // ============================================================================
 // ERROR TYPES

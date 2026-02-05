@@ -1,4 +1,4 @@
-import { BaseAdapter } from "./BaseAdapter";
+import { BaseAdapter } from "./BaseAdapter.js";
 import type {
   OpenAgent,
   ConversionResult,
@@ -8,7 +8,7 @@ import type {
   SkillReference,
   HookDefinition,
   HookEvent,
-} from "../types";
+} from "../types.js";
 
 /**
  * Claude Code adapter for converting between OpenAgents Control and Claude Code formats.
@@ -24,6 +24,10 @@ import type {
 export class ClaudeAdapter extends BaseAdapter {
   readonly name = "claude";
   readonly displayName = "Claude Code";
+
+  constructor() {
+    super();
+  }
 
   // ============================================================================
   // CONVERSION METHODS

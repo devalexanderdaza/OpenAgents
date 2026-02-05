@@ -20,38 +20,38 @@ import type {
   GranularPermission,
   ContextReference,
   SkillReference,
-} from "../types";
+} from "../types.js";
 
 import {
   mapToolAccessFromOAC,
   mapToolAccessToOAC,
-} from "../mappers/ToolMapper";
+} from "../mappers/ToolMapper.js";
 
 import {
   mapPermissionsFromOAC,
   mapPermissionsToOAC,
   type DegradationStrategy,
   type BinaryPermissions,
-} from "../mappers/PermissionMapper";
+} from "../mappers/PermissionMapper.js";
 
 import {
   mapModelFromOAC,
   mapModelToOAC,
-} from "../mappers/ModelMapper";
+} from "../mappers/ModelMapper.js";
 
 import {
   mapContextReferencesFromOAC,
   mapContextPathToOAC,
   mapSkillsToClaudeFormat,
   mapSkillsFromClaudeFormat,
-} from "../mappers/ContextMapper";
+} from "../mappers/ContextMapper.js";
 
 import {
   analyzeCompatibility,
   getToolCapabilities,
   type Platform,
   type CompatibilityResult,
-} from "../core/CapabilityMatrix";
+} from "../core/CapabilityMatrix.js";
 
 // ============================================================================
 // Types

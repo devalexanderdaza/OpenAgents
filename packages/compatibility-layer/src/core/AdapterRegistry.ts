@@ -1,5 +1,5 @@
-import type { BaseAdapter } from "../adapters/BaseAdapter";
-import type { ToolCapabilities } from "../types";
+import type { BaseAdapter } from "../adapters/BaseAdapter.js";
+import type { ToolCapabilities } from "../types.js";
 
 // ============================================================================
 // ADAPTER REGISTRY TYPES
@@ -313,13 +313,9 @@ export class AdapterRegistry {
    */
   async registerBuiltInAdapters(): Promise<void> {
     // Dynamic imports to avoid circular dependencies
-    // Note: Adapters will be implemented in Phase 2
-    // Uncomment when adapters are ready
-
-    /*
     try {
       // Cursor IDE
-      const { CursorAdapter } = await import("../adapters/CursorAdapter");
+      const { CursorAdapter } = await import("../adapters/CursorAdapter.js");
       this.register(new CursorAdapter(), ["cursor-ide", "cursor-editor"]);
     } catch (error) {
       // Adapter not yet implemented - skip silently
@@ -327,7 +323,7 @@ export class AdapterRegistry {
 
     try {
       // Claude Code
-      const { ClaudeAdapter } = await import("../adapters/ClaudeAdapter");
+      const { ClaudeAdapter } = await import("../adapters/ClaudeAdapter.js");
       this.register(new ClaudeAdapter(), ["claude-code", "anthropic-claude"]);
     } catch (error) {
       // Adapter not yet implemented - skip silently
@@ -335,12 +331,11 @@ export class AdapterRegistry {
 
     try {
       // Windsurf (experimental)
-      const { WindsurfAdapter } = await import("../adapters/WindsurfAdapter");
+      const { WindsurfAdapter } = await import("../adapters/WindsurfAdapter.js");
       this.register(new WindsurfAdapter(), ["windsurf-ide"]);
     } catch (error) {
       // Adapter not yet implemented - skip silently
     }
-    */
   }
 }
 
@@ -355,7 +350,7 @@ export class AdapterRegistry {
  * 
  * @example
  * ```ts
- * import { registry } from './core/AdapterRegistry';
+ * import { registry } from './core/AdapterRegistry.js';
  * 
  * const adapter = registry.get('cursor');
  * ```

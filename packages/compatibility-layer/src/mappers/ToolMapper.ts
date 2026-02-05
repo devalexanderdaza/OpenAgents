@@ -11,7 +11,7 @@
  * ```
  */
 
-import type { ToolAccess } from "../types";
+import type { ToolAccess } from "../types.js";
 
 // ============================================================================
 // Types

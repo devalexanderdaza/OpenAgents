@@ -11,7 +11,7 @@
  * ```
  */
 
-import type { OpenAgent, ToolCapabilities } from "../types";
+import type { OpenAgent, ToolCapabilities } from "../types.js";
 
 // ============================================================================
 // Types

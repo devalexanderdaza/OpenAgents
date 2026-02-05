@@ -13,7 +13,7 @@
  * ```
  */
 
-import type { GranularPermission, PermissionRule } from "../types";
+import type { GranularPermission, PermissionRule } from "../types.js";
 
 // ============================================================================
 // Types

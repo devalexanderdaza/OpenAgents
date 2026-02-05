@@ -34,7 +34,7 @@
  * - SkillReference, HookDefinition
  * - ToolCapabilities, ConversionResult
  */
-export * from "./types";
+export * from "./types.js";
 
 // ============================================================================
 // CORE - Agent Loading
@@ -58,7 +58,7 @@ export {
   AgentLoader,
   loadAgent,
   loadAgents,
-} from "./core/AgentLoader";
+} from "./core/AgentLoader.js";
 
 /**
  * Error classes from AgentLoader for handling load failures.
@@ -71,7 +71,7 @@ export {
   AgentLoadError,
   FrontmatterParseError,
   ValidationError,
-} from "./core/AgentLoader";
+} from "./core/AgentLoader.js";
 
 // ============================================================================
 // CORE - Adapter Registry
@@ -97,17 +97,17 @@ export {
   getAdapter,
   listAdapters,
   getAllCapabilities,
-} from "./core/AdapterRegistry";
+} from "./core/AdapterRegistry.js";
 
 /**
  * Error class for adapter registry operations.
  */
-export { AdapterRegistryError } from "./core/AdapterRegistry";
+export { AdapterRegistryError } from "./core/AdapterRegistry.js";
 
 /**
  * Type for adapter information including capabilities.
  */
-export type { AdapterInfo } from "./core/AdapterRegistry";
+export type { AdapterInfo } from "./core/AdapterRegistry.js";
 
 // ============================================================================
 // ADAPTERS - Base Class
@@ -134,7 +134,7 @@ export type { AdapterInfo } from "./core/AdapterRegistry";
  * }
  * ```
  */
-export { BaseAdapter } from "./adapters/BaseAdapter";
+export { BaseAdapter } from "./adapters/BaseAdapter.js";
 
 // ============================================================================
 // ADAPTERS - Built-in Implementations
@@ -154,9 +154,9 @@ export { BaseAdapter } from "./adapters/BaseAdapter";
  */
 
 // Phase 2 adapters (implemented)
-export { CursorAdapter } from "./adapters/CursorAdapter";
-export { ClaudeAdapter } from "./adapters/ClaudeAdapter";
-export { WindsurfAdapter } from "./adapters/WindsurfAdapter";
+export { CursorAdapter } from "./adapters/CursorAdapter.js";
+export { ClaudeAdapter } from "./adapters/ClaudeAdapter.js";
+export { WindsurfAdapter } from "./adapters/WindsurfAdapter.js";
 
 // ============================================================================
 // MAPPERS - Feature Translation (Phase 3)
@@ -183,7 +183,7 @@ export {
   type ToolPlatform,
   type ToolMappingConfig,
   type ToolMappingResult,
-} from "./mappers/ToolMapper";
+} from "./mappers/ToolMapper.js";
 
 /**
  * PermissionMapper for translating between granular and binary permissions.
@@ -211,7 +211,7 @@ export {
   type BinaryPermissions,
   type PermissionMappingResult,
   type DegradationStrategy,
-} from "./mappers/PermissionMapper";
+} from "./mappers/PermissionMapper.js";
 
 /**
  * ModelMapper for translating AI model identifiers.
@@ -237,7 +237,7 @@ export {
   type ModelMappingResult,
   type ModelFamily,
   type ModelInfo,
-} from "./mappers/ModelMapper";
+} from "./mappers/ModelMapper.js";
 
 /**
  * ContextMapper for translating context file paths.
@@ -266,7 +266,7 @@ export {
   getRelativeContextPath,
   type ContextPlatform,
   type ContextMappingResult,
-} from "./mappers/ContextMapper";
+} from "./mappers/ContextMapper.js";
 
 // ============================================================================
 // CORE - Capability Matrix & Translation Engine (Phase 3)
@@ -297,7 +297,7 @@ export {
   type SupportLevel,
   type FeatureDefinition,
   type CompatibilityResult,
-} from "./core/CapabilityMatrix";
+} from "./core/CapabilityMatrix.js";
 
 /**
  * TranslationEngine for orchestrating complete agent translation.
@@ -323,7 +323,7 @@ export {
   type TranslationOptions,
   type TranslationResult,
   type ReverseTranslationResult,
-} from "./core/TranslationEngine";
+} from "./core/TranslationEngine.js";
 
 // ============================================================================
 // VERSION INFO

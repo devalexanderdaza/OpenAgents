@@ -1,10 +1,10 @@
-import { BaseAdapter } from "./BaseAdapter";
+import { BaseAdapter } from "./BaseAdapter.js";
 import type {
   OpenAgent,
   ConversionResult,
   ToolCapabilities,
   AgentFrontmatter,
-} from "../types";
+} from "../types.js";
 
 /**
  * Cursor IDE adapter for converting between OpenAgents Control and Cursor IDE formats.
@@ -26,6 +26,10 @@ import type {
 export class CursorAdapter extends BaseAdapter {
   readonly name = "cursor";
   readonly displayName = "Cursor IDE";
+
+  constructor() {
+    super();
+  }
 
   // ============================================================================
   // CONVERSION METHODS

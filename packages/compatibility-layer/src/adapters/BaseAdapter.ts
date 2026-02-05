@@ -2,7 +2,7 @@ import type {
   OpenAgent,
   ConversionResult,
   ToolCapabilities,
-} from "../types";
+} from "../types.js";
 
 /**
  * Abstract base class for all tool adapters.

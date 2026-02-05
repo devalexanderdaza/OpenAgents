@@ -39,6 +39,7 @@ import {
   logVerbose,
   logError,
 } from "./utils.js";
+import { createConvertAction } from "./commands/convert.js";
 
 // Read version from package.json
 const __filename = fileURLToPath(import.meta.url);
@@ -112,16 +113,7 @@ const registerConvertCommand = (program: Command): void => {
         .choices(PLATFORMS as unknown as string[])
     )
     .option("--force", "overwrite existing output file")
-    .action((input, options, command) => {
-      const globalOpts = command.optsWithGlobals() as GlobalOptions;
-      const config = createLoggerConfig(globalOpts);
-
-      logVerbose(config, `Converting: ${input}`);
-      logVerbose(config, `Target format: ${options.format}`);
-
-      // Placeholder - will be implemented in Subtask 21
-      logInfo(config, "Convert command not yet implemented (Subtask 21)");
-    });
+    .action(createConvertAction());
 };
 
 /**
