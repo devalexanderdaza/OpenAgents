@@ -634,10 +634,9 @@ export const executeMigrate = async (
     
     if (discoveredFiles.length === 0) {
       spinnerWarn(discoverySpinner, "No agent files found");
-      return successResult({
-        ...createEmptyReport(),
-        warnings: ["No agent files found in source directory"],
-      });
+      const emptyReport = createEmptyReport();
+      emptyReport.warnings = ["No agent files found in source directory"];
+      return successResult(emptyReport, ["No agent files found in source directory"]);
     }
     
     spinnerSuccess(discoverySpinner, `Found ${discoveredFiles.length} agent file(s)`);
