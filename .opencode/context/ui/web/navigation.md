@@ -16,7 +16,10 @@
 | [ui-styling-standards.md](ui-styling-standards.md) | CSS frameworks, Tailwind patterns, styling best practices | high |
 | [react-patterns.md](react-patterns.md) | Modern React patterns, hooks, component design | high |
 | [design-systems.md](design-systems.md) | Design system principles and component libraries | medium |
-| [design-assets.md](design-assets.md) | Icons, fonts, images, and asset management | medium |
+| [images-guide.md](images-guide.md) | Placeholder and responsive images | medium |
+| [icons-guide.md](icons-guide.md) | Icon systems (Lucide, Heroicons, FA) | medium |
+| [fonts-guide.md](fonts-guide.md) | Font loading and optimization | medium |
+| [cdn-resources.md](cdn-resources.md) | CDN libraries and resources | medium |
 
 ### Subcategories
 
@@ -79,10 +82,10 @@ Design system principles, component libraries, and maintaining consistency acros
 
 **Key topics**: Design tokens, component APIs, documentation, versioning
 
-### design-assets.md
-Managing icons, fonts, images, and other design assets in web applications.
+### images-guide.md, icons-guide.md, fonts-guide.md, cdn-resources.md
+Managing design assets in web applications - split into focused guides.
 
-**Key topics**: Icon libraries (Lucide, Font Awesome), web fonts, image optimization
+**Key topics**: Placeholder images, icon libraries (Lucide, Heroicons), web fonts, CDN resources
 
 ---
 
@@ -101,6 +104,6 @@ Managing icons, fonts, images, and other design assets in web applications.
 ---
 
 ## Statistics
-- Core files: 5
+- Core files: 8
 - Subcategories: 1 (design/)
-- **Total context files**: 5 + design subcategory
+- **Total context files**: 8 + design subcategory
