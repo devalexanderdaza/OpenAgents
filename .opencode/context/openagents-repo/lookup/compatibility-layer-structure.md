@@ -2,7 +2,7 @@
 
 **Purpose**: Quick reference for where files go in the compatibility-layer package
 
-**Last Updated**: 2026-02-04
+**Last Updated**: 2026-02-05
 
 ---
 
@@ -14,106 +14,104 @@ packages/compatibility-layer/
 
 ---
 
-## Directory Structure
+## Directory Structure (Current State)
 
 ```
 compatibility-layer/
-├── package.json              # Dependencies, scripts, bin config
+├── package.json              # Dependencies, scripts
 ├── tsconfig.json             # TypeScript config (strict, ES2022)
 ├── vitest.config.ts          # Test config (80% coverage threshold)
-├── .eslintrc.json           # Linting rules
-├── .gitignore               # Git ignores
-├── README.md                # Package documentation
+├── README.md                 # Package documentation
 │
-├── src/                     # Source code (TypeScript)
-│   ├── types.ts             # Zod schemas + type exports
-│   ├── index.ts             # Public API exports
+├── src/                      # Source code (5,799 lines)
+│   ├── types.ts              # Zod schemas + type exports (315 lines) ✅
+│   ├── index.ts              # Public API exports (335 lines) ✅
 │   │
-│   ├── adapters/            # Tool adapters
-│   │   ├── BaseAdapter.ts   # Abstract base class
-│   │   ├── ClaudeAdapter.ts # Claude Code adapter
-│   │   ├── CursorAdapter.ts # Cursor IDE adapter
-│   │   └── WindsurfAdapter.ts # Windsurf adapter
+│   ├── adapters/             # Tool adapters ✅ COMPLETE
+│   │   ├── BaseAdapter.ts    # Abstract base class (190 lines)
+│   │   ├── ClaudeAdapter.ts  # Claude Code adapter (600 lines)
+│   │   ├── CursorAdapter.ts  # Cursor IDE adapter (554 lines)
+│   │   └── WindsurfAdapter.ts # Windsurf adapter (514 lines)
 │   │
-│   ├── core/                # Core services
-│   │   ├── AgentLoader.ts   # Load/parse OAC agents
-│   │   ├── AdapterRegistry.ts # Adapter management
-│   │   ├── TranslationEngine.ts # Orchestrate conversion
-│   │   └── CapabilityMatrix.ts # Feature parity tracking
+│   ├── core/                 # Core services ✅ COMPLETE
+│   │   ├── AgentLoader.ts    # Load/parse OAC agents (386 lines)
+│   │   ├── AdapterRegistry.ts # Adapter management (416 lines)
+│   │   ├── CapabilityMatrix.ts # Feature parity tracking (559 lines)
+│   │   └── TranslationEngine.ts # Conversion orchestration (453 lines)
 │   │
-│   ├── mappers/             # Feature mappers (pure functions)
-│   │   ├── ToolMapper.ts    # Tool name mapping
-│   │   ├── PermissionMapper.ts # Permission translation
-│   │   ├── ModelMapper.ts   # Model ID mapping
-│   │   └── ContextMapper.ts # Context path mapping
+│   ├── mappers/              # Feature mappers ✅ COMPLETE
+│   │   ├── ToolMapper.ts     # Tool name mapping (308 lines)
+│   │   ├── PermissionMapper.ts # Permission translation (354 lines)
+│   │   ├── ModelMapper.ts    # Model ID mapping (413 lines)
+│   │   └── ContextMapper.ts  # Context path mapping (384 lines)
 │   │
-│   └── cli/                 # Command-line interface
-│       ├── index.ts         # CLI entry point
+│   └── cli/                  # Command-line interface 📝 TODO
+│       ├── index.ts          # CLI entry point
 │       └── commands/
-│           ├── convert.ts   # Convert command
-│           ├── validate.ts  # Validate command
-│           ├── migrate.ts   # Migrate command
-│           └── info.ts      # Info command
+│           ├── convert.ts    # Convert command
+│           ├── validate.ts   # Validate command
+│           ├── migrate.ts    # Migrate command
+│           └── info.ts       # Info command
 │
-├── tests/                   # Test files
-│   ├── unit/
-│   │   ├── core/            # AgentLoader, Registry tests
-│   │   ├── adapters/        # Adapter tests
-│   │   └── mappers/         # Mapper tests
-│   ├── integration/         # End-to-end tests
-│   └── fixtures/            # Test data
-│       ├── agents/          # Sample agent files
-│       └── expected/        # Expected outputs
+├── tests/                    # Test files (6,322 lines, 485 tests)
+│   └── unit/
+│       ├── adapters/         # Adapter tests ✅ COMPLETE
+│       │   ├── ClaudeAdapter.test.ts (80 tests)
+│       │   ├── CursorAdapter.test.ts (78 tests)
+│       │   └── WindsurfAdapter.test.ts (78 tests)
+│       ├── mappers/          # Mapper tests ✅ COMPLETE
+│       │   ├── ToolMapper.test.ts (34 tests)
+│       │   ├── PermissionMapper.test.ts (37 tests)
+│       │   ├── ModelMapper.test.ts (37 tests)
+│       │   └── ContextMapper.test.ts (51 tests)
+│       └── core/             # Core tests ✅ COMPLETE
+│           ├── CapabilityMatrix.test.ts (43 tests)
+│           └── TranslationEngine.test.ts (47 tests)
 │
-├── docs/                    # Documentation
-│   ├── migration-guides/    # Migration instructions
-│   ├── feature-matrices/    # Feature comparison tables
-│   └── api/                 # API documentation
+├── docs/                     # Documentation 📝 TODO
+│   ├── migration-guides/     # Migration instructions
+│   ├── feature-matrices/     # Feature comparison tables
+│   └── api/                  # API documentation
 │
-└── dist/                    # Compiled output (auto-generated)
+└── dist/                     # Compiled output (auto-generated)
 ```
 
 ---
 
-## Key Files
+## Implementation Status
 
-### Configuration Files
+### ✅ Complete (Phases 1-3)
 
-| File | Purpose | Lines |
+| File | Lines | Tests | Coverage |
+|------|-------|-------|----------|
+| types.ts | 315 | - | - |
+| index.ts | 335 | - | - |
+| BaseAdapter.ts | 190 | - | 92% |
+| ClaudeAdapter.ts | 600 | 80 | 96% |
+| CursorAdapter.ts | 554 | 78 | 99% |
+| WindsurfAdapter.ts | 514 | 78 | 99% |
+| AgentLoader.ts | 386 | - | 0%* |
+| AdapterRegistry.ts | 416 | - | 0%* |
+| CapabilityMatrix.ts | 559 | 43 | 99% |
+| TranslationEngine.ts | 453 | 47 | 99% |
+| ToolMapper.ts | 308 | 34 | 100% |
+| PermissionMapper.ts | 354 | 37 | 98% |
+| ModelMapper.ts | 413 | 37 | 99% |
+| ContextMapper.ts | 384 | 51 | 97% |
+
+*AgentLoader and AdapterRegistry are tested indirectly via adapters
+
+### 📝 Pending (Phase 4-5)
+
+| File | Purpose | Phase |
 |------|---------|-------|
-| package.json | Dependencies, scripts, bin: oac-compat | ~80 |
-| tsconfig.json | TypeScript strict mode, ES2022 | ~30 |
-| vitest.config.ts | Coverage: 80% lines, 80% functions | ~20 |
-| .eslintrc.json | TypeScript + recommended rules | ~15 |
-
-### Source Files (src/)
-
-| File | Purpose | Lines | Status |
-|------|---------|-------|--------|
-| types.ts | 20+ Zod schemas, type exports | 315 | ✅ Done |
-| index.ts | Public API exports | ~50 | 📝 TODO |
-| adapters/BaseAdapter.ts | Abstract adapter class | 190 | ✅ Done |
-| adapters/ClaudeAdapter.ts | Claude Code support | ~300 | 📝 TODO |
-| adapters/CursorAdapter.ts | Cursor IDE support | ~250 | 📝 TODO |
-| adapters/WindsurfAdapter.ts | Windsurf support | ~200 | 📝 TODO |
-| core/AgentLoader.ts | Load agents from .md files | ~150 | 🔥 Next |
-| core/AdapterRegistry.ts | Registry pattern | ~80 | 📝 TODO |
-| core/TranslationEngine.ts | Conversion orchestration | ~200 | 📝 TODO |
-| core/CapabilityMatrix.ts | Feature comparison | ~120 | 📝 TODO |
-| mappers/ToolMapper.ts | Tool name mapping | ~100 | 📝 TODO |
-| mappers/PermissionMapper.ts | Permission translation | ~150 | 📝 TODO |
-| mappers/ModelMapper.ts | Model ID mapping | ~80 | 📝 TODO |
-| mappers/ContextMapper.ts | Context path mapping | ~80 | 📝 TODO |
-
-### CLI Files (src/cli/)
-
-| File | Purpose | Lines | Status |
-|------|---------|-------|--------|
-| cli/index.ts | Commander.js setup | ~100 | 📝 TODO |
-| cli/commands/convert.ts | Convert between formats | ~200 | 📝 TODO |
-| cli/commands/validate.ts | Pre-conversion checks | ~150 | 📝 TODO |
-| cli/commands/migrate.ts | Batch migration | ~250 | 📝 TODO |
-| cli/commands/info.ts | Show capabilities | ~100 | 📝 TODO |
+| cli/index.ts | CLI entry point | 4 |
+| cli/commands/convert.ts | Convert command | 4 |
+| cli/commands/validate.ts | Validate command | 4 |
+| cli/commands/migrate.ts | Migrate command | 4 |
+| cli/commands/info.ts | Info command | 4 |
+| docs/migration-guides/*.md | Migration guides | 5 |
+| docs/api/*.md | API documentation | 5 |
 
 ---
 
@@ -126,19 +124,22 @@ compatibility-layer/
 | zod | Schema validation | ^3.22.0 |
 | js-yaml | YAML parsing | ^4.1.0 |
 | gray-matter | Frontmatter extraction | ^4.0.3 |
-| commander | CLI framework | ^11.1.0 |
-| chalk | Terminal colors | ^5.3.0 |
-| ora | Loading spinners | ^7.0.1 |
 
 ### Development
 
 | Package | Purpose | Version |
 |---------|---------|---------|
 | typescript | TypeScript compiler | ^5.4.0 |
-| vitest | Test framework | ^1.3.0 |
-| @vitest/coverage-v8 | Coverage reporting | ^1.3.0 |
-| eslint | Linting | ^8.57.0 |
-| @typescript-eslint/* | TypeScript linting | ^7.0.0 |
+| vitest | Test framework | ^1.6.1 |
+| @vitest/coverage-v8 | Coverage reporting | ^1.6.1 |
+
+### CLI (Phase 4 - to be added)
+
+| Package | Purpose | Version |
+|---------|---------|---------|
+| commander | CLI framework | ^11.1.0 |
+| chalk | Terminal colors | ^5.3.0 |
+| ora | Loading spinners | ^7.0.1 |
 
 ---
 
@@ -147,44 +148,21 @@ compatibility-layer/
 ```json
 {
   "build": "tsc",
-  "test": "vitest",
-  "test:coverage": "vitest --coverage",
-  "lint": "eslint src/**/*.ts",
-  "clean": "rm -rf dist"
+  "build:watch": "tsc --watch",
+  "test": "vitest run",
+  "test:watch": "vitest",
+  "test:coverage": "vitest run --coverage"
 }
 ```
 
 ---
 
-## Binary
-
-CLI installed as global command:
-
-```bash
-npm install -g @openagents/compatibility-layer
-
-# Provides:
-oac-compat convert --from oac --to claude agent.md
-oac-compat validate agent.md --target cursor
-oac-compat migrate . --to claude
-oac-compat info --adapter claude
-```
-
----
-
-## Related Packages
-
-- `@openagents/core` - Core OAC functionality
-- `@openagents/cli` - Main CLI tool
-- `@openagents/plugin-*` - Plugin system
-
----
-
 ## Reference
 
-- **Session Context**: `.tmp/sessions/2026-02-04-compatibility-layer-141/`
-- **Task Breakdown**: `.tmp/tasks/compatibility-layer-141/`
-- **Related**:
-  - concepts/compatibility-layer.md
-  - guides/compatibility-layer-workflow.md
-  - examples/baseadapter-pattern.md
+- **Issue**: https://github.com/darrenhinde/OpenAgentsControl/issues/141
+- **Branch**: `devalexanderdaza/issue141`
+
+**Related**:
+- lookup/compatibility-layer-progress.md
+- lookup/compatibility-layer-adapters.md
+- guides/compatibility-layer-workflow.md

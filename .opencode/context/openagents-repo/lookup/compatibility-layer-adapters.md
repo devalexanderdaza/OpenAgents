@@ -2,19 +2,19 @@
 
 **Purpose**: Quick reference for implemented adapter details
 
-**Last Updated**: 2026-02-04
+**Last Updated**: 2026-02-05
 
 ---
 
 ## Adapter Summary
 
-| Adapter | Lines | Status | Key Features |
-|---------|-------|--------|--------------|
-| **ClaudeAdapter** | 600 | ✅ Complete | Skills, Hooks, Multi-agent, Binary permissions |
-| **CursorAdapter** | 554 | ✅ Complete | Single-file, Agent merging, Limited features |
-| **WindsurfAdapter** | 514 | ✅ Complete | Creativity mapping, Multi-agent, JSON config |
+| Adapter | Lines | Tests | Coverage | Status |
+|---------|-------|-------|----------|--------|
+| **ClaudeAdapter** | 600 | 80 | 96% | ✅ Complete |
+| **CursorAdapter** | 554 | 78 | 99% | ✅ Complete |
+| **WindsurfAdapter** | 514 | 78 | 99% | ✅ Complete |
 
-**Total**: 1,858 lines of TypeScript
+**Total**: 1,858 lines of TypeScript, 236 tests
 
 ---
 
@@ -33,6 +33,8 @@
 - Model: `claude-sonnet-4` ↔ `claude-sonnet-4-20250514`
 - Permissions: Granular OAC → `permissionMode` (default/acceptEdits/dontAsk/bypassPermissions)
 - Contexts → Skills system
+
+**Tests**: 80 tests covering toOAC(), fromOAC(), roundtrip, error handling
 
 ---
 
@@ -56,6 +58,8 @@
 - Model: `claude-sonnet-4` → `claude-3-sonnet` (fallback to v3)
 - Multiple agents → Merged with section headers
 
+**Tests**: 78 tests covering toOAC(), fromOAC(), merging, error handling
+
 ---
 
 ## WindsurfAdapter
@@ -74,6 +78,30 @@
 - Temperature ↔ Creativity: `≤0.4 → low`, `≤0.8 → medium`, `>0.8 → high`
 - Priority: `critical/high → high`, `medium/low → low`
 - Skills → Context file references in `.windsurf/context/`
+
+**Tests**: 78 tests covering toOAC(), fromOAC(), creativity mapping, error handling
+
+---
+
+## Mappers (Phase 3 ✅)
+
+All mappers are pure functions used by adapters and TranslationEngine:
+
+| Mapper | Lines | Tests | Coverage | Purpose |
+|--------|-------|-------|----------|---------|
+| **ToolMapper** | 308 | 34 | 100% | Tool name mapping (bash↔terminal, etc.) |
+| **PermissionMapper** | 354 | 37 | 98% | Granular↔binary permissions |
+| **ModelMapper** | 413 | 37 | 99% | Model ID mapping with fallbacks |
+| **ContextMapper** | 384 | 51 | 97% | Context path mapping between platforms |
+
+---
+
+## Core Services (Phase 3 ✅)
+
+| Service | Lines | Tests | Coverage | Purpose |
+|---------|-------|-------|----------|---------|
+| **CapabilityMatrix** | 559 | 43 | 99% | Feature compatibility analysis |
+| **TranslationEngine** | 453 | 47 | 99% | Orchestrates all mappers |
 
 ---
 
@@ -98,12 +126,31 @@ All adapters warn when features are lost:
 
 ---
 
+## Feature Parity Matrix
+
+| Feature | OAC | Claude | Cursor | Windsurf |
+|---------|-----|--------|--------|----------|
+| Multiple Agents | ✅ | ✅ | ❌ | ✅ |
+| Granular Permissions | ✅ | ❌ | ❌ | ❌ |
+| Ask Permissions | ✅ | ❌ | ❌ | ❌ |
+| Hooks | ✅ | ✅ | ❌ | ❌ |
+| Skills | ✅ | ✅ | ❌ | ⚠️ |
+| External Context | ✅ | ✅ | ❌ | ✅ |
+| Context Priority | ✅ | ❌ | ❌ | ❌ |
+| Temperature | ✅ | ❌ | ⚠️ | ✅ |
+| Model Selection | ✅ | ✅ | ✅ | ✅ |
+| Task Delegation | ✅ | ✅ | ❌ | ⚠️ |
+
+Legend: ✅ Full support, ⚠️ Partial support, ❌ Not supported
+
+---
+
 ## Reference
 
 **Implementation**: `packages/compatibility-layer/src/adapters/`
 **Issue**: https://github.com/darrenhinde/OpenAgentsControl/issues/141
 
 **Related**:
-- concepts/compatibility-layer.md
-- examples/baseadapter-implementation.md
-- guides/compatibility-layer-development.md
+- lookup/compatibility-layer-progress.md
+- lookup/compatibility-layer-structure.md
+- guides/compatibility-layer-workflow.md
