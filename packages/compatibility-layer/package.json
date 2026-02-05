@@ -33,7 +33,17 @@
     "ai-tools",
     "agent-conversion"
   ],
-  "author": "OpenAgents Control Contributors",
+  "author": {
+    "name": "Darren Hinde",
+    "url": "https://github.com/darrenhinde/OpenAgentsControl"
+  },
+  "contributors": [
+    {
+      "name": "Alexander Daza",
+      "email": "dev.alexander.daza@gmail.com",
+      "url": "https://github.com/devalexanderdaza"
+    }
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
