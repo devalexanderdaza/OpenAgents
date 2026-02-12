@@ -23,10 +23,10 @@ core/
 ├── workflows/
 │   ├── navigation.md
 │   ├── code-review.md
-│   ├── task-delegation.md
+│   ├── task-delegation-basics.md
 │   ├── feature-breakdown.md
 │   ├── session-management.md
-│   └── design-iteration.md
+│   └── design-iteration-overview.md
 │
 ├── guides/
 │   └── resuming-sessions.md      # NEW: Multi-session task resumption
@@ -62,7 +62,7 @@ core/
 | **Write docs** | `standards/documentation.md` |
 | **Security patterns** | `standards/security-patterns.md` |
 | **Review code** | `workflows/code-review.md` |
-| **Delegate task** | `workflows/task-delegation.md` |
+| **Delegate task** | `workflows/task-delegation-basics.md` |
 | **Break down feature** | `workflows/feature-breakdown.md` |
 | **Resume session** | `guides/resuming-sessions.md` |
 | **Manage tasks** | `task-management/navigation.md` |

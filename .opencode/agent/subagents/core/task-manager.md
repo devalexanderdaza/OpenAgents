@@ -56,7 +56,7 @@ WHY THIS MATTERS:
       - Expect the calling agent to supply relevant context file paths; request them if absent.
       - Use the task tool ONLY for ContextScout discovery, never to delegate task planning to TaskManager.
       - Do NOT create session bundles or write `.tmp/sessions/**` files.
-      - Do NOT read `.opencode/context/core/workflows/task-delegation.md` or follow delegation workflows.
+      - Do NOT read `.opencode/context/core/workflows/task-delegation-basics.md` or follow delegation workflows.
       - Your output (JSON files) is your primary communication channel.
     </with_meta_agent>
 
@@ -85,7 +85,7 @@ WHY THIS MATTERS:
 
         2. Check current task state:
            ```bash
-           npx ts-node --compiler-options '{"module":"commonjs"}' .opencode/skill/task-management/scripts/task-cli.ts status
+           npx ts-node --compiler-options '{"module":"commonjs"}' .opencode/skills/task-management/scripts/task-cli.ts status
            ```
 
         3. If context bundle provided, load and extract:
@@ -207,13 +207,14 @@ WHY THIS MATTERS:
  
               **FRONTEND RULE**: If a task involves UI design, styling, or frontend implementation:
               1. Set `suggested_agent`: "OpenFrontendSpecialist"
-              2. Include `.opencode/context/ui/web/ui-styling-standards.md` and `.opencode/context/core/workflows/design-iteration.md` in `context_files`.
-              3. Ensure `acceptance_criteria` includes "Follows 4-stage design workflow" and "Responsive at all breakpoints".
-              4. **PARALLELIZATION**: Design tasks can run in parallel (`parallel: true`) since design work is isolated and doesn't affect backend/logic implementation. Only mark `parallel: false` if design depends on backend API contracts or data structures.
+              2. Include `.opencode/context/ui/web/ui-styling-standards.md` and `.opencode/context/core/workflows/design-iteration-overview.md` in `context_files`.
+              3. If the design task is stage-specific, also include the relevant stage file(s): `design-iteration-stage-layout.md`, `design-iteration-stage-theme.md`, `design-iteration-stage-animation.md`, `design-iteration-stage-implementation.md`.
+              4. Ensure `acceptance_criteria` includes "Follows 4-stage design workflow" and "Responsive at all breakpoints".
+              5. **PARALLELIZATION**: Design tasks can run in parallel (`parallel: true`) since design work is isolated and doesn't affect backend/logic implementation. Only mark `parallel: false` if design depends on backend API contracts or data structures.
  
          4. Validate with CLI:
            ```bash
-           npx ts-node --compiler-options '{"module":"commonjs"}' .opencode/skill/task-management/scripts/task-cli.ts validate {feature}
+           npx ts-node --compiler-options '{"module":"commonjs"}' .opencode/skills/task-management/scripts/task-cli.ts validate {feature}
            ```
 
         5. Report creation:
@@ -242,7 +243,7 @@ WHY THIS MATTERS:
 
         3. If all criteria pass:
            ```bash
-           npx ts-node --compiler-options '{"module":"commonjs"}' .opencode/skill/task-management/scripts/task-cli.ts complete {feature} {seq} "{summary}"
+           npx ts-node --compiler-options '{"module":"commonjs"}' .opencode/skills/task-management/scripts/task-cli.ts complete {feature} {seq} "{summary}"
            ```
 
         4. If criteria fail:
@@ -252,7 +253,7 @@ WHY THIS MATTERS:
 
         5. Check for next task:
            ```bash
-           npx ts-node --compiler-options '{"module":"commonjs"}' .opencode/skill/task-management/scripts/task-cli.ts next {feature}
+           npx ts-node --compiler-options '{"module":"commonjs"}' .opencode/skills/task-management/scripts/task-cli.ts next {feature}
            ```
       </process>
       <checkpoint>Task verified and status updated</checkpoint>
@@ -264,7 +265,7 @@ WHY THIS MATTERS:
       <process>
         1. Verify all tasks complete:
            ```bash
-           npx ts-node --compiler-options '{"module":"commonjs"}' .opencode/skill/task-management/scripts/task-cli.ts status {feature}
+           npx ts-node --compiler-options '{"module":"commonjs"}' .opencode/skills/task-management/scripts/task-cli.ts status {feature}
            ```
 
         2. If completed_count == subtask_count:
@@ -329,7 +330,7 @@ Use task-cli.ts for all status operations:
 | `complete feature seq "summary"` | After verifying task completion |
 | `validate [feature]` | After creating files |
 
-Script location: `.opencode/skill/task-management/scripts/task-cli.ts`
+Script location: `.opencode/skills/task-management/scripts/task-cli.ts`
 </cli_integration>
 
 <quality_standards>
@@ -364,4 +365,3 @@ Script location: `.opencode/skill/task-management/scripts/task-cli.ts`
     <lazy_loading>Reference context files, don't embed content</lazy_loading>
     <no_self_delegation>Do not create session bundles or delegate to TaskManager; execute directly</no_self_delegation>
   </principles>
-

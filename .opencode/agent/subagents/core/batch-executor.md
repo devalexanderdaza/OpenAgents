@@ -7,7 +7,7 @@ permission:
   bash:
     "*": "deny"
     "npx ts-node*task-cli*": "allow"
-    "bash .opencode/skill/task-management/router.sh*": "allow"
+    "bash .opencode/skills/task-management/router.sh*": "allow"
   edit:
     "**/*.env*": "deny"
     "**/*.key": "deny"
@@ -19,6 +19,7 @@ permission:
     contextscout: "allow"
     externalscout: "allow"
     coderagent: "allow"
+    OpenFrontendSpecialist: "allow"
 ---
 
 # BatchExecutor
@@ -165,7 +166,7 @@ While waiting, you can optionally:
 
 ```bash
 # Check status of all subtasks in this batch
-bash .opencode/skill/task-management/router.sh status {feature}
+bash .opencode/skills/task-management/router.sh status {feature}
 ```
 
 Expected output:
@@ -235,7 +236,7 @@ Batch 2 depends on: 01, 02, 03 (all now satisfied).
 1. **Detect failure** from CoderAgent return
 2. **Check status** of other tasks in batch:
    ```bash
-   bash .opencode/skill/task-management/router.sh status {feature}
+   bash .opencode/skills/task-management/router.sh status {feature}
    ```
 3. **Report to orchestrator**:
    ```
@@ -261,7 +262,7 @@ If CoderAgent reports completion but status doesn't show completed:
 2. **Check if CoderAgent actually ran task-cli.ts complete**
 3. **Manually mark complete** if needed:
    ```bash
-   bash .opencode/skill/task-management/router.sh complete {feature} {seq} "{summary}"
+   bash .opencode/skills/task-management/router.sh complete {feature} {seq} "{summary}"
    ```
 4. **Report discrepancy** to orchestrator
 

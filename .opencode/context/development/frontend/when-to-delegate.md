@@ -292,7 +292,7 @@ The frontend-specialist will automatically load these via ContextScout:
 - `development/frontend/react/react-patterns.md` - React patterns (if React project)
 
 **Workflows**:
-- `core/workflows/design-iteration.md` - Design iteration workflow
+- `core/workflows/design-iteration-overview.md` - Design iteration workflow
 
 ---
 
@@ -464,5 +464,5 @@ task(
 - **Design Systems** → `../../ui/web/design-systems.md`
 - **UI Styling Standards** → `../../ui/web/ui-styling-standards.md`
 - **Animation Patterns** → `../../ui/web/animation-patterns.md`
-- **Delegation Workflow** → `../../core/workflows/task-delegation.md`
+- **Delegation Workflow** → `../../core/workflows/task-delegation-basics.md`
 - **React Patterns** → `react/react-patterns.md`
