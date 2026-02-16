@@ -1,6 +1,6 @@
 {
   "name": "oac",
-  "description": "AI development workflow automation for Claude Code - intelligent code review, TDD test generation, automated documentation, and smart task breakdown",
+  "description": "OpenAgents Control - Intelligent code review, TDD test generation, automated documentation, and smart task breakdown with context-aware AI agents",
   "version": "1.0.0",
   "author": {
     "name": "darrenhinde",

@@ -8,8 +8,8 @@
   "plugins": [
     {
       "name": "oac",
-      "source": "./claude-plugin",
-      "description": "Ship faster with AI-powered development workflows. Automates code review, test generation, documentation, and task breakdown. Context-aware agents understand your codebase and enforce your team's standards. Works seamlessly with OpenCode, Cursor, and Windsurf.",
+      "source": "./plugins/claude-code",
+      "description": "Ship faster with AI-powered development workflows. Automates code review, test generation, documentation, and task breakdown. Context-aware agents understand your codebase and enforce your team's standards.",
       "version": "1.0.0",
       "author": {
         "name": "darrenhinde",
