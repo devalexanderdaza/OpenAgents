@@ -2,7 +2,7 @@
   "name": "oac",
   "description": "OpenAgents Control - Multi-agent orchestration and automation for Claude Code",
   "version": "1.0.0",
-  "author": "NextSystems",
+  "author": "darrenhinde",
   "license": "MIT",
   "repository": "https://github.com/darrenhinde/OpenAgentsControl",
   "tags": [

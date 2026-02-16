@@ -20,7 +20,10 @@
         "code-review",
         "documentation"
       ],
-      "author": "NextSystems",
+      "author": {
+        "name": "darrenhinde",
+        "url": "https://github.com/darrenhinde"
+      },
       "license": "MIT",
       "repository": "https://github.com/darrenhinde/OpenAgentsControl"
     }
