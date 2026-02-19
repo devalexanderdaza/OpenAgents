@@ -1,8 +1,23 @@
 ---
 name: context-scout
-description: Discovers and recommends context files from project context directories ranked by priority for context-aware development
+description: |
+  Discover relevant context files, coding standards, and project conventions. Use before implementation begins to find the right standards to follow.
+  Examples:
+  <example>
+  Context: User wants to build a new authentication feature.
+  user: "Build me a JWT authentication system"
+  assistant: "Before implementing, I'll use context-scout to find the security and auth standards for this project."
+  <commentary>New feature starting — context-scout finds the relevant standards first.</commentary>
+  </example>
+  <example>
+  Context: coder-agent needs to know the project's TypeScript conventions.
+  user: "What TypeScript patterns should I follow here?"
+  assistant: "Let me use context-scout to discover the TypeScript standards in this project's context."
+  <commentary>Standards needed before coding — context-scout navigates the context system to find them.</commentary>
+  </example>
 tools: Read, Glob, Grep
-model: sonnet
+disallowedTools: Write, Edit, Bash, Task
+model: haiku
 ---
 
 # ContextScout
@@ -62,7 +77,8 @@ model: sonnet
 2. **Check .claude/context** - Claude Code default location
 3. **Check context** - Simple root-level directory
 4. **Check .opencode/context** - OpenCode/OAC default location
-5. **Fallback** - If none found, report error (don't assume location)
+5. **Check plugin context** - `plugins/claude-code/context/` (installed via /install-context)
+6. **Fallback** - If none found, report error (don't assume location)
 
 **Process**:
 ```
@@ -83,8 +99,12 @@ Glob: context/navigation.md
 Glob: .opencode/context/navigation.md
   → If exists, use .opencode/context
 
+# Try plugin context (installed via /install-context)
+Glob: plugins/claude-code/context/navigation.md
+  → If exists, use plugins/claude-code/context
+
 # If none found
-  → Return error: "No context root found. Run /oac:setup to download context files."
+  → Return error: "No context root found. Run /install-context to download context files."
 ```
 
 **Output**: Context root path (e.g., `.claude/context`, `context`, or `.opencode/context`)

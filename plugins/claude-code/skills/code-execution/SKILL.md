@@ -1,44 +1,44 @@
 ---
 name: code-execution
-description: Execute coding subtasks with self-review and quality validation. Use when implementing features, refactoring code, creating new files, or modifying existing code. Invokes the coder-agent subagent for isolated execution.
+description: Use when a subtask is ready to implement and has a subtask JSON file with acceptance criteria and deliverables.
 context: fork
 agent: coder-agent
 ---
 
-# Code Execution Skill
+# Code Execution
 
-Execute coding subtask: $ARGUMENTS
+## Overview
+Execute coding subtasks with self-review and quality validation. Runs in isolated coder-agent context with pre-loaded standards.
 
-## Context
+**Announce at start:** "I'm using the code-execution skill to implement [subtask title]."
 
-You are running in the **coder-agent subagent** with isolated context. The main agent has pre-loaded all necessary context files and created the subtask JSON.
-
-## Your Task
-
-1. **Read the subtask JSON** at the path provided in $ARGUMENTS
-2. **Load all context_files** listed in the subtask (standards, patterns, conventions)
-3. **Load all reference_files** to understand existing code patterns
-4. **Implement deliverables** following acceptance criteria exactly
-5. **Run self-review** (type validation, import verification, anti-pattern scan)
-6. **Mark subtask complete** using task-cli.ts
-7. **Return completion report** to main agent
-
-## Workflow
+## The Process
 
 ### Step 1: Read Subtask JSON
 
-The subtask path is: $ARGUMENTS
+Load the subtask file specified in $ARGUMENTS:
 
-Read it to understand:
+```bash
+Read: .tmp/tasks/{feature}/subtask_{seq}.json
+```
+
+Extract:
 - `title` — What to implement
 - `acceptance_criteria` — What defines success
 - `deliverables` — Files/endpoints to create
-- `context_files` — Standards to apply (pre-discovered by main agent)
+- `context_files` — Standards to apply
 - `reference_files` — Existing code to study
 
 ### Step 2: Load Context Files
 
-Read each file in `context_files` to understand:
+Read each file in `context_files`:
+
+```bash
+Read: .opencode/context/core/standards/code-quality.md
+Read: .opencode/context/core/standards/security-patterns.md
+```
+
+Understand:
 - Project coding standards
 - Naming conventions
 - Security patterns
@@ -46,14 +46,20 @@ Read each file in `context_files` to understand:
 
 ### Step 3: Load Reference Files
 
-Read each file in `reference_files` to understand:
+Read each file in `reference_files`:
+
+```bash
+Read: src/middleware/auth.middleware.ts
+```
+
+Study:
 - Existing patterns
 - Code structure
-- Conventions already in use
+- Conventions in use
 
-### Step 4: Update Status
+### Step 4: Update Status to In Progress
 
-Use `edit` to update the subtask JSON:
+Edit subtask JSON:
 
 ```json
 "status": "in_progress",
@@ -65,119 +71,103 @@ Use `edit` to update the subtask JSON:
 
 For each deliverable:
 - Create or modify the specified file
-- Follow acceptance criteria exactly
+- Follow acceptance criteria EXACTLY
 - Apply standards from context_files
 - Use patterns from reference_files
 - Write clean, modular, functional code
 
-### Step 6: Self-Review (MANDATORY)
+### Step 6: Run Self-Review (MANDATORY)
 
-Run ALL checks:
+**Type & Import Validation:**
+- ✅ Function signatures match usage
+- ✅ All imports/exports exist
+- ✅ No missing type annotations
+- ✅ No circular dependencies
 
-**Type & Import Validation**:
-- Verify function signatures match usage
-- Confirm all imports/exports exist
-- Check for missing type annotations
-- Verify no circular dependencies
+**Anti-Pattern Scan:**
+```bash
+grep "console.log" deliverables  # NO debug statements
+grep "TODO\|FIXME" deliverables  # NO unfinished work
+grep "api[_-]key\|secret" deliverables  # NO hardcoded secrets
+```
 
-**Anti-Pattern Scan** (use `grep`):
-- `console.log` — debug statements
-- `TODO` or `FIXME` — unfinished work
-- Hardcoded secrets or API keys
-- Missing error handling in async functions
-- `any` types where specific types required
-
-**Acceptance Criteria Verification**:
-- Re-read acceptance_criteria array
-- Confirm EACH criterion is met
-- Fix any unmet criteria before proceeding
+**Acceptance Criteria Check:**
+- Re-read `acceptance_criteria` array
+- Confirm EACH criterion met
+- Fix unmet criteria before proceeding
 
 ### Step 7: Mark Complete
 
 Update subtask status:
 
 ```bash
-bash .opencode/skills/task-management/router.sh complete {feature} {seq} "{completion_summary}"
+bash .opencode/skills/task-management/router.sh complete {feature} {seq} "{summary}"
 ```
 
-Verify completion:
+Verify:
 
 ```bash
 bash .opencode/skills/task-management/router.sh status {feature}
 ```
 
-### Step 8: Return Completion Report
-
-Report to main agent:
+### Step 8: Return Report
 
 ```
 ✅ Subtask {feature}-{seq} COMPLETED
 
-Self-Review: ✅ Types clean | ✅ Imports verified | ✅ No debug artifacts | ✅ All acceptance criteria met
+Self-Review: ✅ Types | ✅ Imports | ✅ No debug code | ✅ Criteria met
 
 Deliverables:
-- {file1}
-- {file2}
-- {file3}
+- src/auth/jwt.service.ts
+- src/auth/jwt.service.test.ts
 
-Summary: {completion_summary}
+Summary: JWT service with RS256 signing and 15min token expiry
 ```
 
-## Principles
+## Error Handling
 
-- **Context first, code second** — Always read context_files before implementing
-- **One subtask at a time** — Complete fully before moving on
-- **Self-review is mandatory** — Quality gate before signaling done
-- **Functional, declarative, modular** — Clean code patterns
-- **Return results to main agent** — Report completion for orchestration
+**Missing subtask JSON:**
+- Main agent must create subtask before invoking this skill
 
-## When Main Agent Should Use This Skill
+**Context files not found:**
+- Main agent must run `/context-discovery` first
 
-The main agent should invoke this skill when:
+**Acceptance criteria unmet:**
+- DO NOT mark complete—fix issues first
 
-- **Implementing new features** — Creating new files, functions, or modules
-- **Refactoring existing code** — Improving structure, performance, or maintainability
-- **Fixing bugs** — Modifying code to resolve issues
-- **Adding functionality** — Extending existing code with new capabilities
-- **Creating tests** — Writing unit, integration, or e2e tests (though test-generation skill is preferred)
+## Red Flags
 
-## What Main Agent Must Do First
+If you think any of these, STOP and re-read this skill:
 
-Before invoking this skill, the main agent MUST:
+- "I know the pattern, I don't need to read the context files"
+- "I'll do the self-review quickly at the end"
+- "The acceptance criteria are obvious, I don't need to check them"
+- "I'll mark it done and fix the edge cases later"
 
-1. **Discover context** using context-discovery skill
-2. **Create subtask JSON** with all required fields:
-   - `title`, `acceptance_criteria`, `deliverables`
-   - `context_files` (from context-discovery)
-   - `reference_files` (existing code to study)
-3. **Get approval** from user for the implementation plan
-4. **Pass subtask JSON path** as $ARGUMENTS to this skill
+## Common Rationalizations
 
-## Example Usage
+| Excuse | Reality |
+|--------|---------|
+| "I've seen this pattern before, context files will just confirm what I know" | Projects diverge from common patterns. One wrong assumption = rework. Read the files. |
+| "Self-review is just checking my own work" | Self-review catches type errors, missing imports, and debug code before the main agent sees it. |
+| "The criteria are implied by the task title" | Implied criteria are unverifiable. If it's not written, it's not a gate. |
+| "I'll handle edge cases in a follow-up" | Edge cases left for follow-up become bugs in production. Handle them now. |
 
-Main agent workflow:
+## Remember
 
-```
-1. User: "Implement JWT authentication"
+- Context FIRST, code SECOND—always read context_files before implementing
+- One subtask at a time—complete fully before moving on
+- Self-review is MANDATORY—quality gate before marking done
+- Functional, declarative, modular—clean code patterns only
+- Return results to main agent—report completion for orchestration
 
-2. Main agent invokes: /context-discovery "JWT authentication patterns"
-   → Returns: security patterns, auth standards, coding conventions
+## Related
 
-3. Main agent creates: .tmp/tasks/auth-system/subtask_01.json
-   → Includes: context_files, acceptance_criteria, deliverables
+- context-discovery
+- task-breakdown
+- test-generation
+- code-review
 
-4. Main agent presents plan and gets approval
+---
 
-5. Main agent invokes: /code-execution ".tmp/tasks/auth-system/subtask_01.json"
-   → Coder-agent executes in isolated context
-   → Returns completion report
-
-6. Main agent continues orchestration
-```
-
-## Notes
-
-- This skill runs in **isolated context** (coder-agent subagent)
-- Context files are **pre-loaded** by main agent (no nested ContextScout calls)
-- Results are **returned to main agent** for orchestration
-- Main agent handles **workflow progression** and **approval gates**
+**Task**: Execute coding subtask: **$ARGUMENTS**

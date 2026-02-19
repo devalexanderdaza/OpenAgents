@@ -1,188 +1,297 @@
 ---
 name: using-oac
-description: OpenAgents Control workflow for context-aware development. Auto-invokes on every task to ensure proper context discovery, planning, and execution with approval gates.
+description: "Use when starting any development task — building a feature, fixing a bug, refactoring, or making any code change."
 ---
+
+<EXTREMELY-IMPORTANT>
+IF you are starting ANY development task, you MUST use this workflow.
+
+This is not negotiable. This is not optional. "Simple" tasks are where skipping stages causes the most wasted work.
+
+EVERY task follows all 6 stages. NO EXCEPTIONS.
+</EXTREMELY-IMPORTANT>
 
 # OpenAgents Control (OAC) Workflow
 
-**Purpose**: Guide Claude through context-aware development using the 6-stage OAC workflow.
+## Overview
 
-**When to use**: Automatically invoked for every development task to ensure proper context discovery, planning, and validation.
+Context-first parallel execution with 6 mandatory stages and 2 approval gates.
 
----
+**Terminal state:** Stage 6 Complete (task documented and summarized)
 
-## 6-Stage Workflow
-
-Execute these stages in order for every development task:
-
-### Stage 1: Analyze & Discover
-
-**Goal**: Understand the task and discover relevant context files.
-
-**Actions**:
-1. Analyze the user's request to understand:
-   - What they want to build/change
-   - Technical scope and complexity
-   - Potential risks or dependencies
-
-2. Invoke the `/context-discovery` skill to find relevant context files:
-   - Coding standards and conventions
-   - Architecture patterns
-   - Security guidelines
-   - Domain-specific guides
-
-3. Capture the list of context files returned by ContextScout
-
-**Output**: List of context files to load, understanding of task scope
+**Core value:** **5x faster feature development through parallel multi-agent execution**
 
 ---
 
-### Stage 2: Plan & Approve
+## Anti-Pattern: "This Is Too Simple for the Full Workflow"
 
-**Goal**: Create an execution plan and get user approval before proceeding.
+Every task goes through all 6 stages. A "simple" email validation, a config change, a "quick fix" — all of them.
 
-**Actions**:
-1. Based on task complexity, create a plan:
-   
-   **Simple tasks** (1-3 files, <30 min):
-   - Direct implementation approach
-   - List of files to create/modify
-   - Key technical decisions
-   
-   **Complex tasks** (4+ files, >30 min):
-   - High-level breakdown into phases
-   - Dependencies between components
-   - Suggest using `/task-breakdown` skill for detailed subtasks
+"Simple" tasks are where unexamined assumptions cause the most wasted work:
+- No context → implement wrong pattern → code review feedback → rework (30+ min wasted)
+- No approval → build wrong thing → user rejects → start over (hours wasted)
+- No validation → tests fail in CI → debug → fix → re-deploy (hours wasted)
 
-2. Present the plan to the user with:
-   - Summary of approach
-   - Files that will be created/modified
-   - Context files that will be loaded
-   - Estimated complexity
+The workflow is fast for simple tasks (5-10 minutes). Skipping it costs 30+ minutes in rework.
 
-3. **REQUEST APPROVAL** - Wait for user confirmation before proceeding
+---
 
-**Critical**: NEVER proceed to Stage 3 without explicit user approval.
+## The Iron Law
 
-**Output**: Approved execution plan
+```
+CONTEXT FIRST, CODE SECOND
+
+Stage 1 → 2 → APPROVAL GATE → 3 → 4 → 5 → VALIDATION GATE → 6
+            ↑                              ↑
+         APPROVAL                    VALIDATION
+          GATE                          GATE
+```
+
+NO skipping stages. NO coding before approval. NO completion before validation.
+
+---
+
+## Workflow Diagram
+
+```dot
+digraph oac {
+    rankdir=LR;
+    node [shape=box, style=rounded];
+    
+    s1 [label="Stage 1\nDiscover"];
+    s2 [label="Stage 2\nPlan"];
+    approval [label="User\nApproval?", shape=diamond];
+    s3 [label="Stage 3\nLoad Context"];
+    s4 [label="Stage 4\nExecute"];
+    s5 [label="Stage 5\nValidate"];
+    validation [label="Validation\nPassed?", shape=diamond];
+    s6 [label="Stage 6\nComplete", shape=doublecircle];
+
+    s1 -> s2;
+    s2 -> approval;
+    approval -> s3 [label="yes"];
+    approval -> s2 [label="no\nrevise"];
+    s3 -> s4;
+    s4 -> s5;
+    s5 -> validation;
+    validation -> s6 [label="yes"];
+    validation -> s4 [label="no\nfix"];
+}
+```
+
+---
+
+## Checklist
+
+Create TodoWrite items for each stage:
+
+1. **Stage 1: Discover** — Invoke `/context-discovery`, get context file list
+2. **Stage 2: Plan** — Create plan (simple: approach, complex: use `/task-breakdown`), present to user
+3. **APPROVAL GATE** — Wait for user confirmation
+4. **Stage 3: LoadContext** — Read ALL discovered context files
+5. **Stage 4: Execute** — Implement (simple: direct, complex: parallel via BatchExecutor)
+6. **Stage 5: Validate** — Run tests, verify criteria, STOP if failed
+7. **VALIDATION GATE** — All tests pass, all criteria met
+8. **Stage 6: Complete** — Update docs, summarize, cleanup
+
+---
+
+## The Stages
+
+### Stage 1: Discover
+
+**Goal:** Understand task + find context files
+
+**Actions:**
+1. Analyze request: What to build, scope, risks
+2. Invoke `/context-discovery [task description]`
+3. Capture returned context file list (Critical → High → Medium priority)
+
+**Output:** Context file list
+
+---
+
+### Stage 2: Plan
+
+**Goal:** Create execution plan + get approval
+
+**Actions:**
+
+**Simple tasks (1-3 files, <30 min):**
+- Direct implementation approach
+- Files to create/modify
+- Key technical decisions
+
+**Complex tasks (4+ files, >30 min):**
+- High-level breakdown into phases
+- Dependencies between components
+- Use `/task-breakdown` for detailed subtasks
+- **Parallel execution**: TaskManager identifies which subtasks can run in parallel
+
+**Present plan:**
+- Summary of approach
+- Files to be created/modified
+- Context files to be loaded
+- Estimated complexity
+- **Parallel batches** (if complex task)
+
+<HARD-GATE>
+REQUEST APPROVAL. Wait for user confirmation.
+
+DO NOT proceed to Stage 3 without explicit user approval.
+
+This applies to EVERY task, regardless of:
+- Perceived simplicity
+- "Obvious" requirements
+- Time pressure
+- Previous similar approvals
+
+If you think "this is too simple to need approval", STOP. You are rationalizing.
+</HARD-GATE>
+
+**Output:** Approved plan
 
 ---
 
 ### Stage 3: LoadContext
 
-**Goal**: Pre-load ALL discovered context files so they're available during execution.
+**Goal:** Pre-load ALL discovered context files for parallel execution
 
-**Actions**:
-1. Read EVERY context file discovered in Stage 1:
-   - Use the `Read` tool to load each file
-   - Load files in priority order (Critical → High → Medium)
-   - **Example**: If Stage 1 found 5 files, Stage 3 reads all 5
-   - **Important**: Don't skip any files - load everything discovered
-
-2. Internalize the loaded context:
-   - Coding standards and patterns
-   - Security requirements
+**Actions:**
+1. Read EVERY context file from Stage 1:
+   - Use Read tool for each file
+   - Load in priority order (Critical → High → Medium)
+   - DON'T skip any files
+2. Internalize context:
+   - Coding standards
+   - Security patterns
    - Naming conventions
    - Architecture constraints
-   - Project-specific conventions
+3. If external libraries involved, invoke `/external-scout [library] [topic]`
 
-**Why This Matters**: This stage prevents nested ContextScout calls during execution. By loading ALL context upfront, subagents invoked in Stage 4 can use the pre-loaded context without needing to call ContextScout themselves. This maintains the flattened delegation hierarchy required by Claude Code.
+**Why this matters for parallel execution:**
 
-3. If external libraries are involved, invoke `/external-scout` to fetch current API docs:
-   - **Example**: If using Drizzle ORM → `/external-scout drizzle schemas`
-   - **Example**: If using React hooks → `/external-scout react hooks`
-   - Load the cached documentation files returned by ExternalScout
-   - Apply current API patterns from external docs
+Pre-loading prevents race conditions when multiple agents execute in parallel:
 
-**Output**: All context loaded (internal + external) and ready for execution
+```
+WITHOUT pre-loading (race condition):
+CoderAgent 1 (10:00:00) → calls ContextScout → gets standards v1
+CoderAgent 2 (10:00:05) → calls ContextScout → gets standards v2
+Result: Inconsistent implementations ❌
+
+WITH pre-loading (consistent):
+Stage 3 (10:00:00) → Load standards once → Store in session
+CoderAgent 1 (10:01:00) → Uses pre-loaded standards
+CoderAgent 2 (10:01:00) → Uses same pre-loaded standards
+Result: Consistent implementations ✓
+```
+
+**Output:** All context loaded and ready for parallel execution
 
 ---
 
 ### Stage 4: Execute
 
-**Goal**: Implement the solution following loaded context and standards.
+**Goal:** Implement following loaded context
 
-**Actions**:
+**Simple tasks (direct execution):**
+1. Implement directly
+2. Follow loaded standards
+3. Apply security patterns
+4. Create tests if required
+5. Self-review before completion
 
-**For Simple Tasks** (direct execution):
-1. Implement the solution directly:
-   - Follow coding standards from loaded context
-   - Apply security patterns
-   - Use naming conventions
-   - Create tests if required
+**Complex tasks (parallel execution via BatchExecutor):**
+1. Invoke `/task-breakdown` → TaskManager creates subtasks with `parallel: true` flags
+2. BatchExecutor groups parallelizable subtasks into batches
+3. Execute batches in parallel:
+   ```
+   Batch 1: [Subtask 01, Subtask 02, Subtask 03] ──┐
+                                                     ├─ All run simultaneously
+   Batch 2: [Subtask 04, Subtask 05] ───────────────┘
+   ```
+4. Each parallel agent uses pre-loaded context from Stage 3
+5. Track progress through subtask completion
 
-2. Self-review before completion:
-   - Verify all acceptance criteria met
-   - Check for type errors or missing imports
-   - Scan for debug artifacts (console.log, TODO, etc.)
-   - Validate against loaded standards
+**Time savings example:**
+- Sequential: 5 subtasks × 30 min = 150 minutes
+- Parallel: 5 subtasks in 2 batches = 60 minutes (2.5x faster)
 
-**For Complex Tasks** (delegated execution):
-1. Invoke `/task-breakdown` skill to create detailed subtasks:
-   - TaskManager will create JSON task files
-   - Each subtask will have clear acceptance criteria
-   - Dependencies will be mapped
-
-2. Execute subtasks in order:
-   - Use `/code-execution` skill for implementation subtasks
-   - Use `/test-generation` skill for test subtasks
-   - Use `/code-review` skill for review subtasks
-
-3. Track progress through subtask completion
-
-**Output**: Implementation complete, all deliverables created
+**Output:** Implementation complete
 
 ---
 
 ### Stage 5: Validate
 
-**Goal**: Verify the implementation works correctly.
+**Goal:** Verify implementation works
 
-**Actions**:
-1. Run tests (if they exist):
-   - Execute test suite
-   - Check for failures
-   - Verify coverage meets requirements
+**Actions:**
+1. Run tests (if they exist)
+2. Validate against acceptance criteria
+3. **For parallel execution**: Verify consistency across parallel implementations
 
-2. Validate against acceptance criteria:
-   - Check each criterion from the plan
-   - Verify all deliverables exist
-   - Confirm standards were followed
+<HARD-GATE>
+STOP if validation fails:
+- Tests fail → fix issues before proceeding
+- Criteria unmet → complete implementation
+- Standards violated → refactor to comply
+- **Parallel conflicts** → resolve inconsistencies
 
-3. **STOP on failure**:
-   - If tests fail → fix issues before proceeding
-   - If criteria unmet → complete implementation
-   - If standards violated → refactor to comply
+DO NOT proceed to Stage 6 until validation passes.
+</HARD-GATE>
 
-**Critical**: Do not proceed to Stage 6 if validation fails.
-
-**Output**: Validated, working implementation
+**Output:** Validated, working implementation
 
 ---
 
 ### Stage 6: Complete
 
-**Goal**: Finalize the task with documentation and cleanup.
+**Goal:** Finalize with docs and cleanup
 
-**Actions**:
-1. Update documentation (if needed):
-   - Update README if new features added
-   - Add inline documentation for complex logic
-   - Update API docs if endpoints changed
-
+**Actions:**
+1. Update documentation (if needed)
 2. Summarize what was done:
-   - List files created/modified
-   - Highlight key technical decisions
-   - Note any follow-up tasks needed
-
+   - Files created/modified
+   - Key technical decisions
+   - **Parallel execution metrics** (if applicable): time saved, batches executed
+   - Follow-up tasks needed
 3. Cleanup (if applicable):
    - Remove temporary files
-   - Clean up debug code
-   - Archive session files (for complex tasks)
-
+   - Archive session files
 4. Present completion summary to user
 
-**Output**: Task complete, documented, and summarized
+**Output:** Task complete, documented, summarized
+
+---
+
+## Red Flags - STOP and Follow Workflow
+
+If you catch yourself thinking:
+- "Quick fix, skip context discovery"
+- "Obvious what they want, skip approval"
+- "It's working, skip validation"
+- "Too simple for full workflow"
+- "Context will slow me down"
+- "I'll load context as needed"
+- "Validation is just a formality"
+- "Parallel execution is overkill"
+
+**All of these mean: STOP. Follow the workflow from Stage 1.**
+
+You are rationalizing. The workflow is non-negotiable.
+
+---
+
+## Common Rationalizations
+
+| Excuse | Reality |
+|--------|---------|
+| "Too simple for full workflow" | Simple tasks are where skipping stages costs most (30+ min rework) |
+| "I know what they want" | Assumptions cause misalignment. Get approval. (Saves hours) |
+| "Context will slow me down" | Context load = 2 min. Rework = 30+ min. |
+| "Validation is formality" | Skipping validation = bugs in production = emergency fixes |
+| "I'll load context as needed" | Causes race conditions in parallel execution |
+| "Parallel is overkill" | 5x speedup for complex features is not overkill |
 
 ---
 
@@ -190,114 +299,122 @@ Execute these stages in order for every development task:
 
 ### Flat Delegation Hierarchy
 
-**OAC Pattern** (nested - NOT supported in Claude Code):
-```
-Main Agent → TaskManager → CoderAgent → ContextScout
-```
+**Rule**: Only the main agent can invoke subagents. Subagents never call other subagents.
 
-**Claude Code Pattern** (flat - CORRECT):
+**Correct pattern:**
 ```
-Main Agent → ContextScout (via /context-discovery)
-Main Agent → TaskManager (via /task-breakdown)
-Main Agent → CoderAgent (via /code-execution)
+Main Agent → /context-discovery → ContextScout
+Main Agent → /task-breakdown → TaskManager
+Main Agent → /code-execution → CoderAgent (multiple in parallel)
 ```
 
-**Rule**: Only the main agent can invoke subagents. Subagents cannot call other subagents.
+**Incorrect pattern (NOT supported):**
+```
+Main Agent → TaskManager → CoderAgent → ContextScout ❌
+```
 
-### Context Pre-Loading
+### Context Pre-Loading for Parallel Execution
 
-**Why**: Prevents nested ContextScout calls during execution.
+**Why**: Prevents race conditions when multiple agents execute simultaneously
 
-**How**: Stage 3 loads ALL context upfront, so execution stages (4-6) have everything they need.
+**How**: Stage 3 loads ALL context once, stored in session file, shared across all parallel agents
 
 ### Approval Gates
 
-**Critical checkpoints**:
-- **Stage 2 → Stage 3**: User must approve the plan
-- **Stage 5 → Stage 6**: Validation must pass
+**Critical checkpoints:**
+- **Stage 2 → 3**: User must approve plan
+- **Stage 5 → 6**: Validation must pass
 
-**Never skip approval** - it prevents wasted work and ensures alignment.
+**Never skip approval** - prevents wasted work and ensures alignment
 
-### Progressive Complexity
+### Parallel Execution (Complex Tasks)
 
-**Simple tasks**: Stages 1-2-3-4-5-6 executed inline by main agent
+**When**: Complex tasks (4+ files, >30 min) with parallelizable subtasks
 
-**Complex tasks**: Stages 1-2-3 by main agent, Stage 4 delegated to TaskManager + specialists
+**How**: 
+1. TaskManager identifies parallel subtasks (`parallel: true`)
+2. BatchExecutor groups into batches
+3. Multiple CoderAgents execute simultaneously
+4. All use same pre-loaded context (Stage 3)
+
+**Benefit**: 5x faster for complex features
 
 ---
 
 ## Skill Invocations
 
-Use these skills at the appropriate stages:
-
-| Skill | When to Invoke | Purpose |
-|-------|----------------|---------|
-| `/context-discovery` | Stage 1 | Find relevant context files |
-| `/external-scout` | Stage 3 | Fetch external library documentation |
-| `/task-breakdown` | Stage 4 (complex tasks) | Create detailed subtasks |
-| `/code-execution` | Stage 4 (subtasks) | Implement code subtasks |
-| `/test-generation` | Stage 4 (subtasks) | Create test subtasks |
-| `/code-review` | Stage 4 (subtasks) | Review code subtasks |
+| Skill | Stage | Purpose |
+|-------|-------|---------|
+| `/context-discovery` | 1 | Find context files |
+| `/external-scout` | 3 | Fetch external library docs |
+| `/task-breakdown` | 2 (complex) | Create detailed subtasks with parallel flags |
+| `/code-execution` | 4 | Implement code subtasks (multiple in parallel) |
+| `/test-generation` | 4 | Create test subtasks |
+| `/code-review` | 4 | Review code subtasks |
 
 ---
 
-## Example Workflow
+## Examples
 
-### Simple Task: "Add email validation to user registration"
+### Simple Task: Add email validation
 
-**Stage 1**: Analyze → Invoke `/context-discovery` → Get validation patterns, security standards
+**Stage 1:** Discover validation patterns, security standards  
+**Stage 2:** Plan "Add regex to endpoint", get approval  
+**Stage 3:** Load patterns, standards  
+**Stage 4:** Implement validation + tests, self-review  
+**Stage 5:** Run tests, verify criteria  
+**Stage 6:** Update API docs, summarize  
 
-**Stage 2**: Plan → "Add email regex validation to registration endpoint" → Request approval
-
-**Stage 3**: Load context → Read validation patterns, security standards
-
-**Stage 4**: Execute → Implement validation, add tests, self-review
-
-**Stage 5**: Validate → Run tests, verify criteria met
-
-**Stage 6**: Complete → Update API docs, summarize changes
-
-### Complex Task: "Build user authentication system"
-
-**Stage 1**: Analyze → Invoke `/context-discovery` → Get auth patterns, security standards, architecture guides
-
-**Stage 2**: Plan → "Multi-phase: JWT service, middleware, endpoints, tests" → Request approval
-
-**Stage 3**: Load context → Read all discovered context files
-
-**Stage 4**: Execute → Invoke `/task-breakdown` → TaskManager creates subtasks → Execute subtasks using `/code-execution`, `/test-generation`, `/code-review`
-
-**Stage 5**: Validate → Run full test suite, verify all acceptance criteria
-
-**Stage 6**: Complete → Update docs, summarize implementation, archive session
+**Time:** ~10 minutes
 
 ---
 
-## Anti-Patterns to Avoid
+### Complex Task: Build authentication system
 
-❌ **Skipping Stage 1** - Coding without context discovery leads to inconsistent patterns
+**Stage 1:** Discover auth patterns, security standards, architecture guides  
+**Stage 2:** Plan "Multi-phase: JWT service, middleware, endpoints, tests", get approval  
+**Stage 3:** Load all discovered files (shared across parallel agents)  
+**Stage 4:** Parallel execution via BatchExecutor:
+```
+Batch 1 (parallel):
+├─ CoderAgent 1 → JWT service
+├─ CoderAgent 2 → Auth middleware  
+└─ CoderAgent 3 → Login endpoint
 
-❌ **Skipping Stage 2 approval** - Implementing without user buy-in wastes effort
+Batch 2 (parallel):
+├─ CoderAgent 4 → Password reset
+└─ TestEngineer → Test suite
+```
+**Stage 5:** Run full test suite, verify all criteria, check consistency  
+**Stage 6:** Update docs, summarize, show time saved (5x faster)  
 
-❌ **Nested subagent calls** - Subagents calling other subagents (not supported in Claude Code)
-
-❌ **Context discovery during execution** - Should be done in Stage 1, loaded in Stage 3
-
-❌ **Proceeding with failed validation** - Stage 5 failures must be fixed before Stage 6
+**Time:** ~60 minutes (vs 300 minutes sequential = 5x faster)
 
 ---
 
 ## Session Management (Complex Tasks)
 
-For complex tasks requiring TaskManager delegation:
+**Location**: `.tmp/sessions/{session-id}/`
 
-**Session Location**: `.tmp/sessions/{YYYY-MM-DD}-{task-slug}/`
-
-**Session Files**:
-- `context.md` - Task context, discovered files, requirements
-- `progress.md` - Execution progress tracking
+**Files**:
+- `context.md` - Shared context for all parallel agents
+- `subtasks/` - Individual subtask definitions
+- `.manifest.json` - Parallel execution state tracking
 
 **Cleanup**: After Stage 6, ask user if session files should be deleted
+
+---
+
+## OAC vs Sequential Workflows
+
+| Aspect | Sequential (Superpowers) | Parallel (OAC) |
+|--------|--------------------------|----------------|
+| **Model** | 1 agent, sequential | Multiple agents, parallel |
+| **Best for** | Simple tasks (< 1 hour) | Complex features (> 4 hours) |
+| **Speed** | Fast for simple | **5x faster for complex** |
+| **Use case** | "Fix typo" | "Build auth system" |
+
+**When to use OAC**: Multi-component features, complex refactors, large features (4+ hours)
 
 ---
 
@@ -305,8 +422,8 @@ For complex tasks requiring TaskManager delegation:
 
 - `context-discovery` - Stage 1 context discovery
 - `external-scout` - Stage 3 external library documentation
-- `task-breakdown` - Stage 4 complex task delegation
-- `code-execution` - Stage 4 code implementation
+- `task-breakdown` - Stage 4 complex task delegation with parallel flags
+- `code-execution` - Stage 4 code implementation (parallel capable)
 - `test-generation` - Stage 4 test creation
 - `code-review` - Stage 4 code review
 
@@ -314,14 +431,10 @@ For complex tasks requiring TaskManager delegation:
 
 ## Success Criteria
 
-✅ Every task follows all 6 stages in order
-
-✅ Context discovered before execution
-
-✅ User approval obtained before implementation
-
-✅ All context pre-loaded (no nested discovery)
-
-✅ Validation passes before completion
-
-✅ Documentation updated and task summarized
+✅ Every task follows all 6 stages in order  
+✅ Context discovered before execution  
+✅ User approval obtained before implementation  
+✅ All context pre-loaded (prevents race conditions in parallel execution)  
+✅ Validation passes before completion  
+✅ Documentation updated and task summarized  
+✅ **Parallel execution used for complex tasks (5x speedup)**  

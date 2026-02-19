@@ -1,7 +1,7 @@
 ---
 name: external-scout
 description: Fetches external library and framework documentation from Context7 API and other sources, caching results for offline use
-tools: Read, Write, Bash
+tools: Read, Write, Bash, WebFetch
 model: haiku
 ---
 

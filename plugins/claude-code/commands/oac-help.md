@@ -62,7 +62,7 @@ Deliverables returned to user
 |-------|---------|---------------|---------|
 | `/using-oac` | N/A (orchestrator) | All | Main workflow orchestration through 6 stages |
 | `/context-discovery` | `context-scout` | Read, Glob, Grep | Discover relevant context files and standards |
-| `/context-manager` | `context-manager` | Read, Write, Glob, Bash | Manage context files, validate structure, organize |
+| `/install-context` | N/A (script runner) | Bash | Download context files from GitHub repository |
 | `/task-breakdown` | `task-manager` | Read, Write, Bash | Break complex features into atomic subtasks |
 | `/code-execution` | `coder-agent` | Read, Write, Edit, Bash | Implement code following discovered standards |
 | `/test-generation` | `test-engineer` | Read, Write, Bash | Generate comprehensive tests using TDD |
@@ -242,54 +242,17 @@ Guide for performing thorough code reviews.
 
 ## 📝 Available Commands
 
-### /oac:setup
-Download context files from GitHub repository.
+### /install-context
+Download context files from the OpenAgents Control registry with interactive profile selection.
 
-**Usage**: `/oac:setup`
+**Usage**: `/install-context [--profile=<profile>] [--force] [--dry-run]`
+
+**Profiles**: `essential`, `standard` (recommended), `extended`, `specialized`, `all`
 
 **What it does**:
-- Fetches `.opencode/context/` from GitHub
-- Validates context structure
+- Asks which profile to install
+- Downloads context files from GitHub registry
 - Creates `.context-manifest.json`
-
-### /oac:plan
-Plan and break down a complex feature into atomic subtasks.
-
-**Usage**: `/oac:plan [feature description]`
-
-**Examples**:
-- `/oac:plan user authentication system`
-- `/oac:plan API rate limiting with Redis`
-- `/oac:plan payment integration (PCI compliance required)`
-
-**What it does**:
-- Analyzes feature requirements
-- Discovers relevant context
-- Creates task breakdown with dependencies
-- Generates JSON task files in `.tmp/tasks/{feature}/`
-
-### /oac:add-context
-Add context files from GitHub, worktrees, local files, or URLs.
-
-**Usage**: `/oac:add-context [source] [options]`
-
-**Examples**:
-- `/oac:add-context github:acme-corp/standards --category=team`
-- `/oac:add-context worktree:../team-context --category=team`
-- `/oac:add-context file:./docs/patterns/auth.md --category=custom`
-- `/oac:add-context url:https://example.com/doc.md --category=external`
-
-**Options**:
-- `--category=<name>` - Target category (default: custom)
-- `--priority=<level>` - Priority level (critical, high, medium)
-- `--overwrite` - Overwrite existing files
-- `--dry-run` - Preview without making changes
-
-**What it does**:
-- Discovers context root location
-- Fetches/copies files from source
-- Validates markdown format
-- Updates navigation for discoverability
 
 ### /oac:help
 Show this usage guide (you're reading it now!).
@@ -326,7 +289,7 @@ Clean up old temporary files with approval.
 
 1. **Download context files** (required):
    ```
-   /oac:setup --core
+   /install-context --profile=essential
    ```
    This downloads coding standards, security patterns, and conventions.
 
@@ -438,15 +401,14 @@ In Claude Code, only the main agent can invoke subagents. Skills orchestrate the
 
 ## 📚 Learn More
 
-- **Installation**: See `INSTALL.md` for setup instructions
-- **Quick Start**: See `QUICK-START.md` for getting started
+- **Installation & Quick Start**: See `README.md` for full setup guide
 - **Architecture**: See `README.md` for system overview
 - **Context System**: Explore `context/` directory for standards and patterns
 
 ## 🆘 Troubleshooting
 
 ### "Context files not found"
-Run `/oac:setup` to download context from GitHub.
+Run `/install-context` to download context from GitHub.
 
 ### "Subagent not available"
 Verify plugin installation with `/oac:status`.
@@ -459,7 +421,7 @@ Claude Code doesn't support nested calls. Use skills to orchestrate, not subagen
 
 ## 💡 Tips
 
-1. **Start with /oac:setup** - Download context files first
+1. **Start with /install-context** - Download context files first
 2. **Let the workflow guide you** - The using-oac skill handles orchestration
 3. **Use context-scout early** - Discover standards before coding
 4. **Break down complex tasks** - Use task-manager for multi-step features

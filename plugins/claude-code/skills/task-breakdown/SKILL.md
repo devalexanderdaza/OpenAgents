@@ -1,101 +1,31 @@
 ---
 name: task-breakdown
-description: Break down complex features into atomic, verifiable subtasks with dependency tracking. Use when implementing multi-step workflows, complex features requiring multiple files, or when the user requests task planning.
+description: Use when a feature touches 4 or more files, involves multiple components, or has subtasks that could run in parallel.
 context: fork
 agent: task-manager
 ---
 
 # Task Breakdown
 
-Break down this feature into atomic, verifiable subtasks: $ARGUMENTS
+## Overview
+Break down complex features into atomic, verifiable subtasks with dependency tracking. Each subtask gets its own JSON file with clear acceptance criteria and deliverables.
 
-## Your Task
+**Announce at start:** "I'm using the task-breakdown skill to create an execution plan for [feature]."
 
-Create a structured task breakdown following the JSON schema:
+## The Process
 
-1. **Analyze the feature**:
-   - Identify core objective and scope
-   - Determine technical risks and dependencies
-   - Find natural task boundaries
-   - Identify which tasks can run in parallel
+### Step 1: Analyze Feature
 
-2. **Create task plan**:
-   - Feature ID (kebab-case)
-   - Objective (max 200 chars)
-   - Context files (standards to follow)
-   - Reference files (source material to study)
-   - Exit criteria (completion requirements)
+Identify these elements:
+- Core objective and scope
+- Technical risks and dependencies
+- Natural task boundaries
+- Tasks that can run in parallel
 
-3. **Generate subtasks**:
-   - Sequential numbering (01, 02, 03...)
-   - Clear title for each
-   - Dependencies mapped via `depends_on`
-   - Parallel flags set for isolated tasks
-   - Suggested agent assigned
-   - Acceptance criteria (binary pass/fail)
-   - Deliverables (specific file paths or endpoints)
+### Step 2: Create Task Plan
 
-4. **Create JSON files**:
-   - `.tmp/tasks/{feature}/task.json` - Feature metadata
-   - `.tmp/tasks/{feature}/subtask_01.json` - First subtask
-   - `.tmp/tasks/{feature}/subtask_02.json` - Second subtask
-   - ... (one file per subtask)
+Write `.tmp/tasks/{feature}/task.json`:
 
-5. **Validate structure**:
-   - All JSON files are valid
-   - Dependency references exist
-   - Context files vs reference files are separated
-   - Acceptance criteria are binary
-   - Deliverables are specific
-
-## Critical Rules
-
-- **Atomic tasks**: Each subtask completable in 1-2 hours
-- **Context separation**: 
-  - `context_files` = standards/conventions ONLY
-  - `reference_files` = project source files ONLY
-  - Never mix them
-- **Binary criteria**: Pass/fail only, no ambiguity
-- **Parallel identification**: Mark isolated tasks as `parallel: true`
-- **Agent assignment**: Suggest appropriate agent for each subtask
-  - "CoderAgent" - Implementation tasks
-  - "TestEngineer" - Test creation
-  - "CodeReviewer" - Review tasks
-  - "OpenFrontendSpecialist" - UI/design tasks
-
-## When to Use This Skill
-
-Use task-breakdown when:
-- Feature requires multiple files or components
-- Implementation has clear sequential steps
-- Tasks have dependencies that need tracking
-- Work can be parallelized across isolated areas
-- User explicitly requests task planning
-- Feature is complex enough to benefit from structured breakdown
-
-## Output Format
-
-Return a summary:
-```
-## Tasks Created
-
-Location: .tmp/tasks/{feature}/
-Files: task.json + {N} subtasks
-
-Subtasks:
-- 01: {title} (parallel: {true/false}, agent: {suggested_agent})
-- 02: {title} (parallel: {true/false}, agent: {suggested_agent})
-...
-
-Next Steps:
-- Execute subtasks in order
-- Parallel tasks can run simultaneously
-- Use task-cli.ts for status tracking
-```
-
-## Example Task Structure
-
-**task.json**:
 ```json
 {
   "id": "jwt-auth",
@@ -119,7 +49,17 @@ Next Steps:
 }
 ```
 
-**subtask_01.json**:
+**Rules:**
+- Feature ID: kebab-case
+- Objective: max 200 chars
+- `context_files`: standards/conventions ONLY
+- `reference_files`: project source files ONLY
+- Exit criteria: binary pass/fail
+
+### Step 3: Generate Subtasks
+
+Write `.tmp/tasks/{feature}/subtask_01.json`, `subtask_02.json`, etc:
+
 ```json
 {
   "id": "jwt-auth-01",
@@ -144,11 +84,76 @@ Next Steps:
 }
 ```
 
-## Quality Standards
+**Rules:**
+- Sequential numbering: 01, 02, 03...
+- Atomic tasks: completable in 1-2 hours
+- Dependencies: map via `depends_on` array
+- Parallel tasks: set `parallel: true` for isolated work
+- Agent assignment: CoderAgent, TestEngineer, CodeReviewer, OpenFrontendSpecialist
+- Acceptance criteria: binary pass/fail only
+- Deliverables: specific file paths or endpoints
 
-- Clear objectives: Single, measurable outcome per task
-- Explicit deliverables: Specific files or endpoints
-- Context references: Reference paths, don't embed content
-- Summary length: Max 200 characters for completion_summary
-- Dependency tracking: Explicit `depends_on` arrays
-- Parallelization: Mark isolated tasks for concurrent execution
+### Step 4: Validate Structure
+
+Verify:
+- ✅ All JSON files valid
+- ✅ Dependency references exist
+- ✅ Context files separate from reference files
+- ✅ Acceptance criteria are binary
+- ✅ Deliverables are specific
+
+### Step 5: Return Summary
+
+```
+## Tasks Created
+
+Location: .tmp/tasks/jwt-auth/
+Files: task.json + 3 subtasks
+
+Subtasks:
+- 01: Create JWT service (parallel: true, agent: CoderAgent)
+- 02: Create password hashing util (parallel: true, agent: CoderAgent)
+- 03: Integrate middleware (parallel: false, agent: CoderAgent)
+
+Next Steps:
+- Execute subtasks in dependency order
+- Tasks 01 and 02 can run in parallel
+- Task 03 depends on completion of 01 and 02
+```
+
+## Red Flags
+
+If you think any of these, STOP and re-read this skill:
+
+- "I can just implement it directly, it's not that complex"
+- "The breakdown will take longer than just doing it"
+- "I already know what needs to be done"
+- "There's only really one task here"
+
+## Common Rationalizations
+
+| Excuse | Reality |
+|--------|---------|
+| "It's only 3-4 files, I don't need a breakdown" | 3-4 files = multiple subtasks with dependencies. Skipping tracking means losing progress on failure. |
+| "I'll track it in my head" | Subagents don't share memory. JSON files are the only reliable state. |
+| "The tasks are obvious, no need to document them" | Obvious tasks still need acceptance criteria. "Done" without binary criteria is not done. |
+| "Parallel execution isn't worth it for this" | Parallel tasks cut execution time in half. The JSON overhead is 2 minutes. The time saving is 20+. |
+
+## Remember
+
+- Each subtask completable in 1-2 hours (atomic)
+- `context_files` = standards ONLY, `reference_files` = source code ONLY
+- Acceptance criteria must be binary (pass/fail)
+- Mark isolated tasks as `parallel: true`
+- Assign appropriate agent for each subtask
+- Deliverables must be specific file paths
+
+## Related
+
+- context-discovery
+- code-execution
+- parallel-execution
+
+---
+
+**Task**: Break down this feature into atomic subtasks: **$ARGUMENTS**

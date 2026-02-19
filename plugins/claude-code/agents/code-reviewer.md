@@ -1,7 +1,22 @@
 ---
 name: code-reviewer
-description: Reviews code for security, correctness, and quality against project standards
+description: |
+  Review code for security vulnerabilities, correctness, and quality. Use after implementation is complete and before committing.
+  Examples:
+  <example>
+  Context: coder-agent has finished implementing a new auth service.
+  user: "The auth service is done, can you check it?"
+  assistant: "I'll run the code-review skill to have code-reviewer validate it before we commit."
+  <commentary>Implementation is complete — code-reviewer validates before commit.</commentary>
+  </example>
+  <example>
+  Context: User is about to merge a PR with database query changes.
+  user: "Review src/db/queries.ts before I merge"
+  assistant: "Using code-reviewer to check for SQL injection and correctness issues."
+  <commentary>Explicit review request on specific files — code-reviewer is the right agent.</commentary>
+  </example>
 tools: Read, Glob, Grep
+disallowedTools: Write, Edit, Bash, Task
 model: sonnet
 ---
 

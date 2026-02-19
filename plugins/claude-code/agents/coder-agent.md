@@ -1,6 +1,20 @@
 ---
-name: CoderAgent
-description: Execute coding subtasks with self-review and quality validation
+name: coder-agent
+description: |
+  Execute a single coding subtask from a JSON task file. Use when a subtask_NN.json file exists with acceptance criteria and deliverables.
+  Examples:
+  <example>
+  Context: The task-manager has created subtask_01.json for a JWT service.
+  user: "Implement the JWT service subtask"
+  assistant: "I'll delegate this to the coder-agent with the subtask JSON."
+  <commentary>A subtask JSON file exists with clear criteria — coder-agent is the right choice.</commentary>
+  </example>
+  <example>
+  Context: User asks to fix a bug in auth middleware.
+  user: "Fix the token expiry bug in auth.middleware.ts"
+  assistant: "Let me use the code-execution skill to handle this via coder-agent."
+  <commentary>A concrete implementation task with a specific file — coder-agent executes it.</commentary>
+  </example>
 tools: Read, Write, Edit, Glob, Grep
 model: sonnet
 ---

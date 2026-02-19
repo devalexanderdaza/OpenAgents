@@ -6,7 +6,7 @@ OpenAgents Control (OAC) - Multi-agent orchestration and automation for Claude C
 
 OpenAgents Control brings powerful multi-agent capabilities to Claude Code through a **skills + subagents architecture**:
 
-- **9 Skills** orchestrate workflows and guide the main agent through multi-stage processes
+- **8 Skills** orchestrate workflows and guide the main agent through multi-stage processes
 - **6 Subagents** execute specialized tasks (context discovery, task breakdown, code implementation, testing, review)
 - **4 Commands** provide setup, status, help, and cleanup functionality
 - **Flat delegation hierarchy** - only the main agent can invoke subagents (no nested calls)
@@ -23,43 +23,72 @@ OpenAgents Control brings powerful multi-agent capabilities to Claude Code throu
 
 ## 📦 Installation
 
-### Option 1: From Marketplace (Recommended)
+### Option 1: From Claude Code Marketplace (Recommended)
+
+Install directly from the Claude Code marketplace:
 
 ```bash
-# Add the OpenAgents Control marketplace
-/plugin marketplace add darrenhinde/OpenAgentsControl
+# Add the OpenAgents Control marketplace repository
+/plugin marketplace add https://github.com/darrenhinde/OpenAgentsControl
 
-# Install the plugin
+# Install the OAC plugin
 /plugin install oac
+
+# Download context files (interactive profile selection)
+/install-context
 ```
+
+> **First time?** Run `/install-context` to download context files, then `/oac:status` to verify.
+
+**That's it!** The plugin is now installed and ready to use.
 
 ### Option 2: Local Development
 
+For plugin development or testing:
+
 ```bash
-# Clone the repo
+# Clone the repository
 git clone https://github.com/darrenhinde/OpenAgentsControl.git
 cd OpenAgentsControl
 
 # Load plugin locally
 claude --plugin-dir ./plugins/claude-code
+
+# Download context files
+/install-context
 ```
 
 ## 🚀 Quick Start
 
-After installation, download context files and start using OAC:
+After installation, the plugin is ready to use:
 
 ```bash
-# Download context files from GitHub
-/oac:setup
-
 # Verify installation
 /oac:status
 
 # Get help and usage guide
 /oac:help
+
+# Start a development task (using-oac skill auto-invokes)
+"Build a user authentication system"
 ```
 
-The **using-oac** skill is automatically invoked when you start a development task, guiding you through the 6-stage workflow.
+The **using-oac** skill is automatically invoked when you start a development task, guiding you through the 6-stage workflow with parallel execution for 5x faster feature development.
+
+### Context Files
+
+Context files are automatically downloaded during installation via `/install-context`. You can update or change profiles anytime:
+
+```bash
+# Install different profile
+/install-context --profile=extended
+
+# Force reinstall
+/install-context --force
+
+# Preview what would be installed
+/install-context --dry-run --profile=all
+```
 
 ## 📚 Available Skills
 
@@ -112,13 +141,6 @@ Guide for performing thorough code reviews with security and quality analysis.
 
 **Invokes**: `code-reviewer` subagent via `context: fork`
 
-### context-manager
-Manage context files, configuration, and project-specific settings. Set up projects, configure context sources, and integrate external task systems.
-
-**Usage**: `/context-manager`
-
-**Use when**: Setting up projects, configuring context sources, managing personal task systems
-
 ### parallel-execution
 Execute multiple independent tasks in parallel to dramatically reduce implementation time for multi-component features.
 
@@ -170,10 +192,10 @@ Perform thorough code review with security analysis, quality checks, and actiona
 
 User-invocable commands for setup and status:
 
-### /oac:setup
+### /install-context
 Download context files from the OpenAgents Control GitHub repository.
 
-**Usage**: `/oac:setup [--core|--all|--category=<name>]`
+**Usage**: `/install-context [--core|--all|--category=<name>]`
 
 **Options**:
 - `--core` - Download only core context files (standards, workflows, patterns)
@@ -306,14 +328,15 @@ The plugin uses context files from the main OpenAgents Control repository.
 plugins/claude-code/
 ├── .claude-plugin/
 │   └── plugin.json              # Plugin metadata
-├── agents/                      # Custom subagents (6 files)
+├── agents/                      # Custom subagents (7 files)
 │   ├── task-manager.md
 │   ├── context-scout.md
+│   ├── context-manager.md
 │   ├── external-scout.md
 │   ├── coder-agent.md
 │   ├── test-engineer.md
 │   └── code-reviewer.md
-├── skills/                      # Workflow skills (9 files)
+├── skills/                      # Workflow skills (8 files)
 │   ├── using-oac/SKILL.md
 │   ├── context-discovery/SKILL.md
 │   ├── external-scout/SKILL.md
@@ -321,10 +344,10 @@ plugins/claude-code/
 │   ├── code-execution/SKILL.md
 │   ├── test-generation/SKILL.md
 │   ├── code-review/SKILL.md
-│   ├── context-manager/SKILL.md
+│   ├── install-context/SKILL.md
 │   └── parallel-execution/SKILL.md
 ├── commands/                    # User commands (4 files)
-│   ├── oac-setup.md
+│   ├── install-context.md
 │   ├── oac-help.md
 │   ├── oac-status.md
 │   └── oac-cleanup.md
@@ -332,14 +355,15 @@ plugins/claude-code/
 │   ├── hooks.json
 │   └── session-start.sh
 ├── scripts/                     # Utility scripts
-│   ├── download-context.sh
-│   └── verify-context.sh
+│   ├── install-context.ts       # Context installer (TypeScript)
+│   ├── install-context.js       # Context installer (JS fallback)
+│   └── cleanup-tmp.sh           # Temporary file cleanup
 └── .context-manifest.json       # Downloaded context tracking
 ```
 
 ### Context Files
 
-Context files are downloaded from the main repository via `/oac:setup`:
+Context files are downloaded from the main repository via `/install-context`:
 
 ```
 .opencode/context/
@@ -445,8 +469,6 @@ Create `hooks/hooks.json`:
 
 ## 📖 Documentation
 
-- [Installation Guide](INSTALL.md)
-- [Quick Start Guide](QUICK-START.md)
 - [Main Documentation](../.opencode/docs/)
 - [Context System](../docs/context-system/)
 - [Planning Documents](../docs/planning/)
@@ -469,8 +491,8 @@ MIT License - see [LICENSE](../LICENSE) for details.
 ### Phase 1: Foundation ✅ COMPLETE
 - ✅ Plugin structure
 - ✅ 6 custom subagents (task-manager, context-scout, external-scout, coder-agent, test-engineer, code-reviewer)
-- ✅ 9 workflow skills (using-oac, context-discovery, external-scout, task-breakdown, code-execution, test-generation, code-review, context-manager, parallel-execution)
-- ✅ 4 user commands (/oac:setup, /oac:help, /oac:status, /oac:cleanup)
+- ✅ 8 workflow skills (using-oac, context-discovery, external-scout, task-breakdown, code-execution, test-generation, code-review, install-context, parallel-execution)
+- ✅ 4 user commands (/install-context, /oac:help, /oac:status, /oac:cleanup)
 - ✅ SessionStart hook for auto-loading using-oac skill
 - ✅ Context download and verification scripts
 - ✅ Flat delegation hierarchy (skills invoke subagents via context: fork)

@@ -1,232 +1,162 @@
 ---
 name: code-review
-description: Review code for security, correctness, and quality before commits or after refactoring. Use when you need to validate code changes, check for security vulnerabilities, or ensure code quality standards are met.
+description: Use when code has been written and needs validation before committing, or when the user asks for a code review or security check.
 context: fork
 agent: code-reviewer
 ---
 
-# Code Review Skill
+# Code Review
 
-Review code changes using the specialized code-reviewer subagent. This skill performs comprehensive code analysis for security vulnerabilities, correctness issues, style violations, and maintainability concerns.
+## Overview
+Review code for security, correctness, and quality. Runs in isolated code-reviewer context with pre-loaded standards.
 
-## When to Use This Skill
+**Announce at start:** "I'm using the code-review skill to validate [files/feature]."
 
-Invoke `/code-review` when:
+## The Process
 
-- **Before committing code** — validate changes meet quality standards
-- **After refactoring** — ensure refactored code maintains correctness
-- **Security-sensitive changes** — review authentication, authorization, data handling
-- **Complex logic changes** — verify correctness of algorithms or business logic
-- **Before pull requests** — catch issues before code review
-- **After dependency updates** — check for breaking changes or security issues
+### Step 1: Pre-Load Context (Main Agent)
 
-## How to Use
+Load standards BEFORE invoking review:
 
-### Basic Usage
-
+```bash
+Read: .opencode/context/core/standards/code-quality.md
+Read: .opencode/context/core/standards/security-patterns.md
 ```
+
+### Step 2: Invoke Review
+
+```bash
 /code-review path/to/file.ts
-```
-
-### Review Multiple Files
-
-```
 /code-review src/auth/*.ts
-```
-
-### Review with Specific Focus
-
-```
-/code-review src/api/handler.ts --focus security
-```
-
-### Review Recent Changes
-
-```
 /code-review $(git diff --name-only HEAD~1)
 ```
 
-## Pre-Loading Context (IMPORTANT)
+### Step 3: Analyze Report
 
-**Before invoking this skill**, the main agent should load relevant context files:
-
-1. **Code Quality Standards** — `.opencode/context/core/standards/code-quality.md`
-2. **Security Patterns** — `.opencode/context/core/standards/security-patterns.md`
-3. **TypeScript Standards** — `.opencode/context/core/standards/typescript.md`
-4. **Project-Specific Conventions** — Any project naming or style guides
-
-**Example workflow**:
-```markdown
-1. Read code quality standards
-2. Read security patterns
-3. Invoke /code-review with file paths
-4. Interpret results (see below)
-```
-
-## What the Reviewer Checks
-
-The code-reviewer subagent performs a comprehensive analysis:
-
-### 🔴 CRITICAL (Security Vulnerabilities)
-- SQL injection risks
-- XSS vulnerabilities
-- Hardcoded credentials or API keys
-- Path traversal risks
-- Command injection
-- Exposed secrets
-- Missing authentication/authorization
-
-### 🟠 HIGH (Correctness Issues)
-- Missing error handling (async without try/catch)
-- Type mismatches
-- Null/undefined handling gaps
-- Logic errors (off-by-one, race conditions)
-- Missing imports or circular dependencies
-
-### 🟡 MEDIUM (Style & Maintainability)
-- Naming convention violations
-- Code duplication (DRY violations)
-- Poor code organization
-- Missing comments on complex logic
-- Overly complex functions
-
-### 🟢 LOW (Suggestions)
-- Performance optimizations
-- Documentation improvements
-- Test coverage gaps
-- Refactoring opportunities
-
-## Interpreting Results
-
-The code-reviewer returns a structured report:
+Code-reviewer returns structured findings:
 
 ```markdown
-## Code Review: [Feature/File]
+## Code Review: Auth Service
 
-### 🔴 CRITICAL Issues (Must Fix)
-1. **SQL Injection Risk** — `src/db/query.ts:42`
-   - **Problem**: Unparameterized query with user input
-   - **Risk**: Database compromise
-   - **Fix**: Use parameterized queries
-   - **Diff**:
+### 🔴 CRITICAL (Must Fix)
+1. **SQL Injection Risk** — src/db/query.ts:42
+   - Problem: Unparameterized query with user input
+   - Risk: Database compromise
+   - Fix:
      ```diff
      - db.query(`SELECT * FROM users WHERE id = ${userId}`)
      + db.query('SELECT * FROM users WHERE id = ?', [userId])
      ```
 
+### 🟠 HIGH (Correctness)
+2. **Missing Error Handling** — src/auth/service.ts:28
+   - Problem: Async function without try/catch
+   - Risk: Unhandled promise rejection
+   - Fix: Wrap in try/catch with proper logging
+
+### 🟡 MEDIUM (Style)
+3. **Naming Convention** — src/auth/middleware.ts:15
+   - Problem: snake_case instead of camelCase
+   - Fix: Rename verify_token → verifyToken
+
 ### Summary
-- **Total Issues**: 12 (3 Critical, 4 High, 3 Medium, 2 Low)
-- **Blocking Issues**: 7
-- **Recommendation**: REQUEST CHANGES
+Total Issues: 3 (1 Critical, 1 High, 1 Medium)
+Recommendation: REQUEST CHANGES
 ```
 
-## Action Based on Results
+### Step 4: Take Action
 
-### If CRITICAL or HIGH issues found:
-1. **STOP** — Do not commit or merge
-2. **Fix issues** — Apply suggested changes
-3. **Re-review** — Run `/code-review` again after fixes
-4. **Verify** — Ensure all blocking issues resolved
+**If CRITICAL or HIGH issues:**
+1. STOP—do not commit
+2. Fix issues using suggested diffs
+3. Re-run `/code-review` to verify
+4. Proceed only when clean
 
-### If only MEDIUM or LOW issues:
-1. **Evaluate** — Decide if fixes should be in this PR or follow-up
-2. **Apply fixes** — Address issues that improve code quality
-3. **Document** — If deferring fixes, create follow-up tasks
-4. **Proceed** — Safe to commit/merge
+**If only MEDIUM or LOW issues:**
+1. Evaluate whether to fix now or later
+2. Apply quality improvements
+3. Safe to commit
 
-### If no issues found:
-1. **Celebrate** — Code meets quality standards
-2. **Commit** — Proceed with confidence
-3. **Document** — Note positive patterns for team learning
+**If no issues:**
+1. Commit with confidence
+2. Note positive patterns
 
-## Example Workflow
+## Review Checks
 
-### Scenario: Review authentication changes before commit
+**🔴 CRITICAL (Security):**
+- SQL injection, XSS, command injection
+- Hardcoded credentials or secrets
+- Path traversal, auth bypass
 
-```markdown
-**Step 1: Load Context**
-Read the following files:
-- .opencode/context/core/standards/security-patterns.md
-- .opencode/context/core/standards/code-quality.md
+**🟠 HIGH (Correctness):**
+- Missing error handling
+- Type mismatches
+- Null/undefined gaps
+- Logic errors, race conditions
 
-**Step 2: Invoke Review**
-/code-review src/auth/service.ts src/auth/middleware.ts
+**🟡 MEDIUM (Maintainability):**
+- Naming violations
+- Code duplication
+- Poor organization
 
-**Step 3: Analyze Results**
-Review report shows:
-- 1 CRITICAL: Hardcoded JWT secret
-- 2 HIGH: Missing error handling in async functions
-- 1 MEDIUM: Inconsistent naming (camelCase vs snake_case)
+**🟢 LOW (Suggestions):**
+- Performance optimizations
+- Documentation improvements
 
-**Step 4: Take Action**
-- Fix CRITICAL: Move JWT secret to environment variable
-- Fix HIGH: Add try/catch blocks with proper error logging
-- Fix MEDIUM: Standardize naming to camelCase
-- Re-run /code-review to verify fixes
+## Error Handling
 
-**Step 5: Commit**
-All blocking issues resolved → Safe to commit
-```
+**Review fails:**
+- Ensure context files pre-loaded
 
-## Integration with OAC Workflow
+**Too many findings:**
+- Fix CRITICAL first, then re-review
 
-This skill integrates with the OpenAgents Control 6-stage workflow:
+**Unclear findings:**
+- Request clarification in report
 
-- **Stage 4 (Execute)**: After implementing code, invoke `/code-review` before marking complete
-- **Stage 5 (Validate)**: Use review results as validation gate
-- **Stage 6 (Complete)**: Only proceed if no blocking issues
+## Red Flags
 
-## Tips for Effective Reviews
+If you think any of these, STOP and re-read this skill:
 
-1. **Review early and often** — Catch issues before they compound
-2. **Focus reviews** — Use `--focus security` for security-sensitive changes
-3. **Review incrementally** — Review files as you complete them, not all at once
-4. **Learn from findings** — Positive observations highlight good patterns
-5. **Pre-load context** — Always load standards before reviewing
-6. **Act on results** — Don't ignore CRITICAL or HIGH findings
+- "The code looks fine, a review is overkill"
+- "I wrote it, I know it's correct"
+- "We're in a hurry, we can review later"
+- "It's a small change, no security risk"
 
-## What the Reviewer Does NOT Do
+## Common Rationalizations
 
-- ❌ **Does not modify code** — Provides suggested diffs only
-- ❌ **Does not run tests** — Use `/test-generation` skill for testing
-- ❌ **Does not deploy** — Review is a quality gate, not deployment
-- ❌ **Does not replace human review** — Complements, doesn't replace peer review
+| Excuse | Reality |
+|--------|---------|
+| "I just wrote it so I know it's right" | The author is the worst reviewer. Fresh eyes catch what familiarity hides. |
+| "It's a small change" | Security vulnerabilities are almost always in small, "obvious" changes. |
+| "We can review after merging" | Post-merge review finds bugs in production. Pre-merge review finds them for free. |
+| "There's no user input so no injection risk" | Internal data becomes user input when requirements change. Review now. |
 
-## Related Skills
+## Remember
 
-- `/context-discovery` — Find code quality standards before reviewing
-- `/test-generation` — Generate tests for reviewed code
-- `/code-execution` — Implement fixes suggested by reviewer
+- Pre-load standards BEFORE invoking review
+- CRITICAL and HIGH issues BLOCK commits
+- Apply suggested fixes with code diffs
+- Re-review after fixing blocking issues
+- Review does NOT modify code—only suggests changes
+- Review does NOT run tests—use test-generation for that
+
+## Related
+
+- context-discovery
+- code-execution
+- test-generation
 
 ---
 
-## Skill Execution
+**Task**: Review the following files: **$ARGUMENTS**
 
-When you invoke `/code-review $ARGUMENTS`, this skill:
+**Instructions for code-reviewer subagent:**
 
-1. **Forks to code-reviewer subagent** — Isolated context for focused review
-2. **Passes file paths** — `$ARGUMENTS` contains files to review
-3. **Expects pre-loaded context** — Main agent should load standards first
-4. **Returns structured report** — Findings organized by severity
-5. **Exits back to main agent** — Results available for action
-
-**Review the following files**: $ARGUMENTS
-
-**Instructions for code-reviewer subagent**:
-
-1. Read all files specified in the arguments
-2. Apply pre-loaded code quality standards, security patterns, and conventions
-3. Perform comprehensive analysis:
-   - Security scan (HIGHEST PRIORITY)
-   - Correctness review
-   - Style & convention check
-   - Performance & maintainability assessment
-4. Structure findings by severity (CRITICAL → HIGH → MEDIUM → LOW)
-5. For each finding, provide:
-   - Clear problem description
-   - Risk/impact assessment
-   - Suggested fix with code diff
-6. Include positive observations (what was done well)
-7. Return structured report with recommendation (APPROVE | REQUEST CHANGES | COMMENT)
-
-**Output format**: Use the structured markdown format defined in the code-reviewer agent (see Step 8 of Review Workflow).
+1. Read all files in $ARGUMENTS
+2. Apply pre-loaded standards (code quality, security, conventions)
+3. Scan for: Security (HIGHEST PRIORITY) → Correctness → Style → Performance
+4. Structure findings by severity: CRITICAL → HIGH → MEDIUM → LOW
+5. For each finding: Problem + Risk + Suggested fix with diff
+6. Include positive observations
+7. Return recommendation: APPROVE | REQUEST CHANGES | COMMENT

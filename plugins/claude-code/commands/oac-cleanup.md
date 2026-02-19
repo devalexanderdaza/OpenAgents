@@ -2,7 +2,6 @@
 name: oac-cleanup
 description: Clean up old temporary files from .tmp directory
 argument-hint: "[--force] [--days=N]"
-disable-model-invocation: true
 ---
 
 # Clean Up Temporary Files
@@ -74,7 +73,7 @@ cleanup:
   external_days: 7       # Days before suggesting external context cleanup
 ```
 
-See `/oac:setup` for more about configuration.
+See `/install-context` for more about configuration.
 
 ## Output
 
@@ -118,7 +117,7 @@ Run cleanup when:
 ## Related Commands
 
 - `/oac:status` - Check current .tmp directory status
-- `/oac:setup` - Configure cleanup settings
+- `/install-context` - Configure cleanup settings
 - `/oac:help` - General help
 
 ---

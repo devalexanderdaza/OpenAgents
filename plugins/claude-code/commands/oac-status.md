@@ -8,35 +8,34 @@ description: Show OpenAgents Control plugin installation status and context
 ## Plugin Information
 
 **Plugin**: OpenAgents Control (OAC)
-**Version**: !`cat plugins/claude-code/.claude-plugin/plugin.json | grep '"version"' | sed 's/.*: "\(.*\)".*/\1/'`
+**Version**: !`jq -r '.version' ${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json 2>/dev/null || cat ${CLAUDE_PLUGIN_ROOT}/.claude-plugin/plugin.json | grep '"version"' | sed 's/.*: "\(.*\)".*/\1/'`
 **Repository**: https://github.com/darrenhinde/OpenAgentsControl
 
 ---
 
 ## Context Installation Status
 
-!`if [ -f "plugins/claude-code/.context-manifest.json" ]; then
+!`PLUGIN_CONTEXT="${CLAUDE_PLUGIN_ROOT}/context"
+MANIFEST="${CLAUDE_PLUGIN_ROOT}/.context-manifest.json"
+if [ -f "$MANIFEST" ]; then
   echo "✅ **Context Installed**"
   echo ""
   echo "### Manifest Details"
-  cat plugins/claude-code/.context-manifest.json | sed 's/^/    /'
+  cat "$MANIFEST" | sed 's/^/    /'
   echo ""
   echo "### Installed Context Files"
-  if [ -d ".opencode/context" ]; then
+  if [ -d "$PLUGIN_CONTEXT" ]; then
     echo ""
     echo "**Core Context**:"
-    find .opencode/context/core -type f -name "*.md" 2>/dev/null | wc -l | xargs -I {} echo "  - {} files"
-    echo ""
-    echo "**OpenAgents Repository Context**:"
-    find .opencode/context/openagents-repo -type f -name "*.md" 2>/dev/null | wc -l | xargs -I {} echo "  - {} files"
+    find "$PLUGIN_CONTEXT/core" -type f -name "*.md" 2>/dev/null | wc -l | xargs -I {} echo "  - {} files"
     echo ""
     echo "**Categories**:"
-    find .opencode/context -type d -mindepth 2 -maxdepth 2 2>/dev/null | sed 's|.opencode/context/||' | sed 's/^/  - /'
+    find "$PLUGIN_CONTEXT" -type d -mindepth 1 -maxdepth 1 2>/dev/null | xargs -I {} basename {} | sed 's/^/  - /'
   fi
 else
   echo "❌ **Context Not Installed**"
   echo ""
-  echo "Run \`/oac:setup\` to download context files from GitHub."
+  echo "Run \`/install-context\` to download context files from GitHub."
 fi`
 
 ---
@@ -76,16 +75,17 @@ fi`
 - `/code-review` - Guide code review process
 
 ### Commands
-- `/oac:setup` - Download context files from GitHub
+- `/install-context` - Download context files from GitHub
 - `/oac:help` - Show usage guide and available skills
 - `/oac:status` - Show this status information
+- `/oac:cleanup` - Clean up old temporary files
 
 ---
 
 ## Recommendations
 
-!`if [ ! -f "plugins/claude-code/.context-manifest.json" ]; then
-  echo "⚠️  **Action Required**: Run \`/oac:setup\` to install context files"
+!`if [ ! -f "${CLAUDE_PLUGIN_ROOT}/.context-manifest.json" ]; then
+  echo "⚠️  **Action Required**: Run \`/install-context\` to install context files"
 elif [ -d ".tmp/sessions" ]; then
   SESSION_COUNT=$(find .tmp/sessions -maxdepth 1 -type d ! -path .tmp/sessions | wc -l | tr -d ' ')
   if [ "$SESSION_COUNT" -gt 5 ]; then
@@ -103,7 +103,7 @@ fi`
 
 To start using OpenAgents Control:
 
-1. **Ensure context is installed**: Run `/oac:setup` if not already done
+1. **Ensure context is installed**: Run `/install-context` if not already done
 2. **Invoke the main workflow**: Use `/using-oac` or let Claude auto-invoke it
 3. **Get help**: Run `/oac:help` for detailed usage guide
 
