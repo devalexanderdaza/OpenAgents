@@ -10,7 +10,7 @@ description: |
   - Validating file-specific requirements
   
   Unlike the auto-detect version, this test EXPLICITLY requires:
-  - .opencode/context/core/standards/code.md
+  - .opencode/context/core/standards/code-quality.md
   
   The evaluator will ONLY pass if the agent reads this exact file
   (or a file containing this path).
@@ -39,9 +39,9 @@ behavior:
   
   # NEW: Explicit context file requirement (takes precedence over auto-detection)
   expectedContextFiles:
-    - .opencode/context/core/standards/code.md
-    - standards/code.md
-    - code.md
+    - .opencode/context/core/standards/code-quality.md
+    - standards/code-quality.md
+    - code-quality.md
 
 expectedViolations:
   - rule: context-loading

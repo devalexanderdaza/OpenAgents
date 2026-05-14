@@ -36,7 +36,7 @@ describe('ContextLoadingEvaluator', () => {
 
     it('should detect .opencode/context/*.md as context files', async () => {
       const timeline: TimelineEvent[] = [
-        createReadToolEvent('/project/.opencode/context/code.md', 1000),
+        createReadToolEvent('/project/.opencode/context/core/standards/code-quality.md', 1000),
         createWriteToolEvent('/src/app.ts', 2000),
       ];
 
@@ -48,7 +48,7 @@ describe('ContextLoadingEvaluator', () => {
 
     it('should detect .opencode/context/core/standards/*.md as context files', async () => {
       const timeline: TimelineEvent[] = [
-        createReadToolEvent('/project/.opencode/context/core/standards/code.md', 1000),
+        createReadToolEvent('/project/.opencode/context/core/standards/code-quality.md', 1000),
         createWriteToolEvent('/src/app.ts', 2000),
       ];
 
@@ -109,7 +109,7 @@ describe('ContextLoadingEvaluator', () => {
   describe('timing validation', () => {
     it('should pass when context is loaded BEFORE execution', async () => {
       const timeline: TimelineEvent[] = [
-        createReadToolEvent('/project/.opencode/context/code.md', 1000),
+        createReadToolEvent('/project/.opencode/context/core/standards/code-quality.md', 1000),
         createWriteToolEvent('/src/app.ts', 2000),
       ];
 
@@ -122,7 +122,7 @@ describe('ContextLoadingEvaluator', () => {
     it('should detect when context is loaded AFTER execution', async () => {
       const timeline: TimelineEvent[] = [
         createWriteToolEvent('/src/app.ts', 1000),
-        createReadToolEvent('/project/.opencode/context/code.md', 2000),
+        createReadToolEvent('/project/.opencode/context/core/standards/code-quality.md', 2000),
       ];
 
       const result = await evaluator.evaluate(timeline, mockSessionInfo);

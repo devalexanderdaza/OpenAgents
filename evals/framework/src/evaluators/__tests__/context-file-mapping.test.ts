@@ -38,7 +38,7 @@ describe('ContextLoadingEvaluator - File Mapping', () => {
         type: 'tool_call',
         data: { 
           tool: 'read',
-          input: { filePath: '.opencode/context/core/standards/code.md' }
+          input: { filePath: '.opencode/context/core/standards/code-quality.md' }
         }
       },
       {
@@ -57,7 +57,7 @@ describe('ContextLoadingEvaluator - File Mapping', () => {
     expect(result.violations).toHaveLength(0);
     expect(result.metadata.taskType).toBe('code');
     expect(result.metadata.correctContextLoaded).toBe(true);
-    expect(result.metadata.expectedContextFiles).toContain('code.md');
+    expect(result.metadata.expectedContextFiles).toContain('code-quality.md');
   });
 
   it('should FAIL when wrong context file loaded for CODE task', async () => {
@@ -72,7 +72,7 @@ describe('ContextLoadingEvaluator - File Mapping', () => {
         type: 'tool_call',
         data: { 
           tool: 'read',
-          input: { filePath: '.opencode/context/core/standards/docs.md' } // WRONG FILE
+          input: { filePath: '.opencode/context/core/standards/documentation.md' } // WRONG FILE
         }
       },
       {
@@ -106,7 +106,7 @@ describe('ContextLoadingEvaluator - File Mapping', () => {
         type: 'tool_call',
         data: { 
           tool: 'read',
-          input: { filePath: '.opencode/context/core/standards/tests.md' }
+          input: { filePath: '.opencode/context/core/standards/test-coverage.md' }
         }
       },
       {
@@ -139,7 +139,7 @@ describe('ContextLoadingEvaluator - File Mapping', () => {
         type: 'tool_call',
         data: { 
           tool: 'read',
-          input: { filePath: '.opencode/context/core/standards/docs.md' }
+          input: { filePath: '.opencode/context/core/standards/documentation.md' }
         }
       },
       {
@@ -196,7 +196,7 @@ describe('ContextLoadingEvaluator - File Mapping', () => {
         type: 'tool_call',
         data: { 
           tool: 'read',
-          input: { filePath: '.opencode/context/core/workflows/delegation.md' }
+          input: { filePath: '.opencode/context/core/workflows/task-delegation-basics.md' }
         }
       },
       {
@@ -228,7 +228,7 @@ describe('ContextLoadingEvaluator - File Mapping', () => {
         type: 'tool_call',
         data: { 
           tool: 'read',
-          input: { filePath: 'standards/code.md' } // Partial path
+          input: { filePath: 'standards/code-quality.md' } // Partial path
         }
       },
       {
@@ -259,7 +259,7 @@ describe('ContextLoadingEvaluator - File Mapping', () => {
         type: 'tool_call',
         data: { 
           tool: 'read',
-          input: { filePath: '.opencode/context/core/standards/code.md' }
+          input: { filePath: '.opencode/context/core/standards/code-quality.md' }
         }
       },
       {
@@ -291,7 +291,7 @@ describe('ContextLoadingEvaluator - File Mapping', () => {
         type: 'tool_call',
         data: { 
           tool: 'read',
-          input: { filePath: '.opencode/context/core/workflows/review.md' }
+          input: { filePath: '.opencode/context/core/workflows/code-review.md' }
         }
       },
       {

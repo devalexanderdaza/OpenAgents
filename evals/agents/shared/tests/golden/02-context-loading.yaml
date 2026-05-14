@@ -17,7 +17,7 @@ category: developer
 
 prompts:
   - text: |
-      What are the coding standards for this project? Check the project documentation to find out.
+      What are the coding standards for this project? Read core/standards/code-quality.md first.
 
 approvalStrategy:
   type: auto-approve

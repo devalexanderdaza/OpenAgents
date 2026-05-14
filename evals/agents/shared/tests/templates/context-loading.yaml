@@ -10,7 +10,7 @@ category: developer
 
 prompts:
   - text: |
-      What are the coding standards for this project? Read the relevant context files first.
+      What are the coding standards for this project? Read core/standards/code-quality.md first.
 
 approvalStrategy:
   type: auto-approve
@@ -21,6 +21,12 @@ behavior:
     - [glob, read]
   minToolCalls: 1
   requiresContext: true
+  # Canonical context filenames used by evaluator auto-mapping:
+  # - code-quality.md
+  # - documentation.md
+  # - test-coverage.md
+  # - code-review.md
+  # - task-delegation-basics.md
 
 expectedViolations:
   - rule: context-loading

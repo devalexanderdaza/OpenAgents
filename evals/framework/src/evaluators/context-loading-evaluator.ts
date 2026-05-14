@@ -53,31 +53,59 @@ export class ContextLoadingEvaluator extends BaseEvaluator {
   ];
 
   /**
-   * Context file mapping per task type
-   * Maps task types to their required context files (with flexible matching)
+   * Context file mapping per task type.
+   *
+   * Canonical files:
+   * - code-quality.md
+   * - documentation.md
+   * - test-coverage.md
+   * - code-review.md
+   * - task-delegation-basics.md
+   *
+   * Legacy aliases are kept for backward compatibility.
    */
   private readonly CONTEXT_FILE_MAP: Record<TaskType, string[]> = {
     'code': [
+      '.opencode/context/core/standards/code-quality.md',
+      'standards/code-quality.md',
+      'code-quality.md',
+      // Legacy aliases (backward compatibility)
       '.opencode/context/core/standards/code.md',
       'standards/code.md',
       'code.md'
     ],
     'docs': [
+      '.opencode/context/core/standards/documentation.md',
+      'standards/documentation.md',
+      'documentation.md',
+      // Legacy aliases (backward compatibility)
       '.opencode/context/core/standards/docs.md',
       'standards/docs.md',
       'docs.md'
     ],
     'tests': [
+      '.opencode/context/core/standards/test-coverage.md',
+      'standards/test-coverage.md',
+      'test-coverage.md',
+      // Legacy aliases (backward compatibility)
       '.opencode/context/core/standards/tests.md',
       'standards/tests.md',
       'tests.md'
     ],
     'review': [
+      '.opencode/context/core/workflows/code-review.md',
+      'workflows/code-review.md',
+      'code-review.md',
+      // Legacy aliases (backward compatibility)
       '.opencode/context/core/workflows/review.md',
       'workflows/review.md',
       'review.md'
     ],
     'delegation': [
+      '.opencode/context/core/workflows/task-delegation-basics.md',
+      'workflows/task-delegation-basics.md',
+      'task-delegation-basics.md',
+      // Legacy aliases (backward compatibility)
       '.opencode/context/core/workflows/delegation.md',
       'workflows/delegation.md',
       'delegation.md'
@@ -510,13 +538,13 @@ export class ContextLoadingEvaluator extends BaseEvaluator {
   private getRequiredContext(userMessage: string): string | undefined {
     // Simple heuristic - could be enhanced
     if (/test|spec|jest|vitest/i.test(userMessage)) {
-      return '.opencode/context/testing.md';
+      return '.opencode/context/core/standards/test-coverage.md';
     }
     if (/document|readme|docs/i.test(userMessage)) {
-      return '.opencode/context/documentation.md';
+      return '.opencode/context/core/standards/documentation.md';
     }
     if (/code|implement|feature|refactor/i.test(userMessage)) {
-      return '.opencode/context/standards.md';
+      return '.opencode/context/core/standards/code-quality.md';
     }
     return undefined;
   }
