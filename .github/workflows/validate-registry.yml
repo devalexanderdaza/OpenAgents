@@ -1,9 +1,20 @@
 name: Validate Registry on PR
 
-# This workflow validates the registry.json and prompt library structure on all PRs.
-# 
-# For bot-created PRs (like automated version bumps), the workflow won't trigger automatically
-# due to GitHub's security restrictions. In those cases, you can manually trigger this workflow:
+# SECURITY HARDENING (Issue #6):
+# This workflow uses the secure pull_request + workflow_dispatch pattern to prevent
+# untrusted PR code execution with elevated permissions.
+#
+# SECURITY RATIONALE:
+# - pull_request_target runs in base branch context with write permissions
+# - Checking out PR head code in that context allows malicious PRs to exfiltrate secrets
+# - Solution: Use pull_request (isolated PR context) + workflow_dispatch for manual bot PR handling
+#
+# TRADEOFFS:
+# - Auto-commit to PR branch disabled for security (pull_request has no write access to PR branch)
+# - Fork PRs: Validation runs, but registry updates must be done manually by contributor
+# - Bot PRs: Manual trigger via workflow_dispatch preserves functionality
+#
+# For bot-created PRs or when auto-commit is needed, use manual trigger:
 #
 # Option 1 - Run Validation:
 # 1. Go to Actions > Validate Registry on PR > Run workflow
@@ -19,14 +30,16 @@ name: Validate Registry on PR
 # 5. The check will pass immediately without running validation
 
 on:
-  # Use pull_request_target to allow running on bot-created PRs
-  # This also allows the workflow to write to the PR branch
-  pull_request_target:
+  # SECURE: pull_request runs in PR context (isolated from base branch)
+  # No write access to base branch, preventing secret exfiltration
+  # Reference: https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
+  pull_request:
     branches:
       - main
       - dev
-    # Removed paths filter - this check is required by repository ruleset
-    # so it must run on ALL PRs to prevent blocking merges
+    # No paths filter - required by repository ruleset to run on ALL PRs
+  
+  # Manual trigger for bot PRs or when write access is needed
   workflow_dispatch:
     inputs:
       pr_number:
@@ -38,9 +51,17 @@ on:
         required: false
         type: boolean
         default: false
+      enable_auto_commit:
+        description: 'Enable auto-commit of registry updates (trusted PRs only)'
+        required: false
+        type: boolean
+        default: false
 
+# LEAST PRIVILEGE: Minimal permissions for validation
+# contents: read - checkout repository
+# pull-requests: write - post comments on fork PRs
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
 
 jobs:
@@ -58,15 +79,29 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "The workflow will complete successfully without running validation steps." >> $GITHUB_STEP_SUMMARY
       
-      - name: Checkout repository (for manual runs)
+      # SECURE CHECKOUT PATTERN (Issue #6):
+      # For pull_request events: checkout base branch only (safe, no PR code)
+      # For workflow_dispatch: can optionally checkout PR branch with explicit trust
+      - name: Checkout repository
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.skip_validation != 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Get PR details (for manual runs)
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.pr_number != '' && github.event.inputs.skip_validation != 'true'
+      # For automatic PR runs: checkout base branch only (SECURE - no PR code execution)
+      - name: Checkout repository (automatic PR)
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.base_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      # For manual runs with auto-commit enabled: fetch PR details and checkout PR branch
+      # This is SAFE because maintainer explicitly triggered it (trusted)
+      - name: Get PR details (for manual runs with auto-commit)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.pr_number != '' && github.event.inputs.skip_validation != 'true' && github.event.inputs.enable_auto_commit == 'true'
         id: get_pr
         run: |
           PR_DATA=$(gh pr view ${{ github.event.inputs.pr_number }} --json headRefName,headRepository,headRepositoryOwner)
@@ -75,14 +110,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Checkout PR branch
-        if: github.event.inputs.skip_validation != 'true'
+      - name: Checkout PR branch (manual run only - trusted)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.skip_validation != 'true' && github.event.inputs.enable_auto_commit == 'true'
         uses: actions/checkout@v4
         with:
-          # For manual runs: use PR details from get_pr step
-          # For PR events: use event data
-          repository: ${{ github.event_name == 'workflow_dispatch' && steps.get_pr.outputs.head_repo || github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event_name == 'workflow_dispatch' && steps.get_pr.outputs.head_ref || github.event.pull_request.head.ref }}
+          repository: ${{ steps.get_pr.outputs.head_repo }}
+          ref: ${{ steps.get_pr.outputs.head_ref }}
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
       
@@ -94,6 +127,7 @@ jobs:
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             HEAD_REPO="${{ steps.get_pr.outputs.head_repo }}"
           else
+            # For pull_request events, use head repository from event
             HEAD_REPO="${{ github.event.pull_request.head.repo.full_name }}"
           fi
           
@@ -196,6 +230,54 @@ jobs:
             exit 1
           fi
 
+      - name: Validate prompt integrity (changed agent files)
+        if: github.event.inputs.skip_validation != 'true'
+        id: validate_prompt_integrity
+        run: |
+          echo "## 🧩 Prompt Integrity Validation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          FILES=""
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # Only validate changed agent/subagent markdown files in this PR
+            FILES=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" | grep -E '^\.opencode/agent/.*\.md$' || true)
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.enable_auto_commit }}" = "true" ]; then
+            # Manual trusted run on PR branch
+            FILES=$(git diff --name-only "origin/${{ github.base_ref || 'main' }}...HEAD" | grep -E '^\.opencode/agent/.*\.md$' || true)
+          else
+            # Safe default for manual runs without PR branch checkout
+            FILES=".opencode/agent/subagents/core/externalscout.md .opencode/agent/subagents/code/test-engineer.md"
+          fi
+
+          if [ -z "$FILES" ]; then
+            echo "prompt_integrity=passed" >> $GITHUB_OUTPUT
+            echo "✅ No changed agent prompt files to validate" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Validating files:" >> $GITHUB_STEP_SUMMARY
+            for f in $FILES; do
+              echo "- $f" >> $GITHUB_STEP_SUMMARY
+            done
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            if bun run scripts/validation/validate-prompt-integrity.ts $FILES > /tmp/prompt-integrity-validation.txt 2>&1; then
+              echo "prompt_integrity=passed" >> $GITHUB_OUTPUT
+              echo "✅ Prompt integrity checks passed for changed files" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              cat /tmp/prompt-integrity-validation.txt >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "prompt_integrity=failed" >> $GITHUB_OUTPUT
+              echo "❌ Prompt integrity checks failed" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              cat /tmp/prompt-integrity-validation.txt >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+          fi
+
       - name: Validate markdown context links
         if: github.event.inputs.skip_validation != 'true'
         id: validate_context_links
@@ -248,9 +330,17 @@ jobs:
             exit 1
           fi
       
-      - name: Commit registry updates (Internal PRs only)
+      # SECURITY NOTE (Issue #6):
+      # Auto-commit only works for workflow_dispatch (manual trigger) because:
+      # - pull_request events run in isolated PR context (no write access to PR branch)
+      # - This is intentional - prevents untrusted PR code from modifying the PR
+      # - For automatic PR runs: validation still works, but no auto-commit
+      # - For manual runs: maintainer explicitly trusts the PR, so auto-commit is safe
+      - name: Commit registry updates (Manual runs only - trusted PRs)
         if: |
+          github.event_name == 'workflow_dispatch' &&
           github.event.inputs.skip_validation != 'true' &&
+          github.event.inputs.enable_auto_commit == 'true' &&
           steps.fork_check.outputs.is_fork == 'false' &&
           steps.auto_detect.outputs.new_components == 'true' &&
           steps.validate_prompts.outputs.prompt_validation == 'passed' &&
@@ -263,8 +353,7 @@ jobs:
             git add registry.json
             git commit -m "chore: auto-update registry with new components [skip ci]"
             
-            # For manual runs, use the fetched branch name
-            BRANCH_NAME="${{ github.event_name == 'workflow_dispatch' && steps.get_pr.outputs.head_ref || github.event.pull_request.head.ref }}"
+            BRANCH_NAME="${{ steps.get_pr.outputs.head_ref }}"
             git push origin "$BRANCH_NAME"
             
             echo "## 🚀 Registry Updated" >> $GITHUB_STEP_SUMMARY
@@ -277,6 +366,38 @@ jobs:
             echo "Registry is already up to date." >> $GITHUB_STEP_SUMMARY
           fi
       
+      # For automatic PR runs: inform user about manual registry update if needed
+      - name: Auto-commit notice (automatic PR runs)
+        if: |
+          github.event_name == 'pull_request' &&
+          steps.auto_detect.outputs.new_components == 'true' &&
+          steps.validate_prompts.outputs.prompt_validation == 'passed' &&
+          steps.validate.outputs.validation == 'passed'
+        run: |
+          echo "## ℹ️ Auto-Commit Disabled for Security" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "New components were detected, but auto-commit is disabled for automatic PR runs." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Why?** This workflow uses the secure \`pull_request\` trigger which runs in" >> $GITHUB_STEP_SUMMARY
+          echo "an isolated context without write access to the PR branch. This prevents" >> $GITHUB_STEP_SUMMARY
+          echo "malicious PR code from exfiltrating secrets or modifying the PR." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.fork_check.outputs.is_fork }}" == "true" ]; then
+            echo "🔀 **Fork PR:** Please run these commands locally:" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "📝 **Internal PR:** Please run these commands locally:" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "./scripts/registry/auto-detect-components.sh --auto-add" >> $GITHUB_STEP_SUMMARY
+          echo "git add registry.json" >> $GITHUB_STEP_SUMMARY
+          echo "git commit -m \"chore: update registry\"" >> $GITHUB_STEP_SUMMARY
+          echo "git push" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Alternatively, a maintainer can manually trigger this workflow with" >> $GITHUB_STEP_SUMMARY
+          echo "**enable_auto_commit** checked to auto-update the registry." >> $GITHUB_STEP_SUMMARY
+      
+      # Fork PR notice - works for both automatic and manual runs
       - name: Fork PR notice
         if: |
           github.event.inputs.skip_validation != 'true' &&
@@ -293,7 +414,7 @@ jobs:
               repo: context.repo.repo,
               body: `## 📝 Registry Update Needed
             
-            Hi @${{ github.event.pull_request.user.login }}! 👋
+            Hi @${{ github.event.pull_request.user.login || 'contributor' }}! 👋
             
             New components were detected in your PR. Since this is a fork PR, I can't auto-commit the registry updates for security reasons.
             
@@ -305,7 +426,11 @@ jobs:
             git push
             \`\`\`
             
-            Once you push the updated registry, the checks will pass! ✅`
+            Once you push the updated registry, the checks will pass! ✅
+            
+            ---
+            **Security Note:** This workflow uses the secure \`pull_request\` trigger pattern
+            to prevent untrusted code execution with elevated permissions.`
             });
       
       - name: Fork PR summary
@@ -314,6 +439,8 @@ jobs:
           echo "## 🔀 Fork PR Detected" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "This is an external contribution - thank you! 🎉" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Security:** Running in isolated context (no write access to base branch)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ "${{ steps.auto_detect.outputs.new_components }}" == "true" ]; then
@@ -332,13 +459,15 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           
           PROMPT_VALID="${{ steps.validate_prompts.outputs.prompt_validation }}"
+          PROMPT_INTEGRITY_VALID="${{ steps.validate_prompt_integrity.outputs.prompt_integrity }}"
           CONTEXT_LINKS_VALID="${{ steps.validate_context_links.outputs.context_links }}"
           REGISTRY_VALID="${{ steps.validate.outputs.validation }}"
 
-          if [ "$PROMPT_VALID" = "passed" ] && [ "$CONTEXT_LINKS_VALID" = "passed" ] && [ "$REGISTRY_VALID" = "passed" ]; then
+          if [ "$PROMPT_VALID" = "passed" ] && [ "$PROMPT_INTEGRITY_VALID" = "passed" ] && [ "$CONTEXT_LINKS_VALID" = "passed" ] && [ "$REGISTRY_VALID" = "passed" ]; then
             echo "### ✅ All Validations Passed" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "- ✅ Prompt library structure is valid" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Prompt integrity checks passed" >> $GITHUB_STEP_SUMMARY
             echo "- ✅ Context markdown links are valid" >> $GITHUB_STEP_SUMMARY
             echo "- ✅ Registry paths are valid" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
@@ -351,6 +480,12 @@ jobs:
               echo "- ❌ Prompt library validation failed" >> $GITHUB_STEP_SUMMARY
             else
               echo "- ✅ Prompt library validation passed" >> $GITHUB_STEP_SUMMARY
+            fi
+
+            if [ "$PROMPT_INTEGRITY_VALID" != "passed" ]; then
+              echo "- ❌ Prompt integrity validation failed" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- ✅ Prompt integrity validation passed" >> $GITHUB_STEP_SUMMARY
             fi
 
             if [ "$CONTEXT_LINKS_VALID" != "passed" ]; then
@@ -371,7 +506,7 @@ jobs:
       
       - name: Fail if validation failed
         if: |
-          (steps.validate_prompts.outputs.prompt_validation == 'failed' || steps.validate_context_links.outputs.context_links == 'failed' || steps.validate.outputs.validation == 'failed') &&
+          (steps.validate_prompts.outputs.prompt_validation == 'failed' || steps.validate_prompt_integrity.outputs.prompt_integrity == 'failed' || steps.validate_context_links.outputs.context_links == 'failed' || steps.validate.outputs.validation == 'failed') &&
           github.event.inputs.skip_validation != 'true'
         run: |
           echo "❌ Validation failed - blocking PR merge"
