@@ -214,7 +214,7 @@ function findDuplicateSections(content: string): Array<{ heading: string; lines:
   let inFence = false
   
   // Match markdown headings (##, ###, etc.)
-  const headingRegex = /^(#{2,6})\s+(.+)$/
+  const headingRegex = /^(#{1,6})\s+(.+)$/
   
   for (let i = 0; i < lines.length; i++) {
     const trimmed = lines[i].trim()
