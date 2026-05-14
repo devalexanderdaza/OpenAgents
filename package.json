@@ -5,7 +5,8 @@
   "workspaces": [
     "evals/framework",
     "packages/cli",
-    "packages/compatibility-layer"
+    "packages/compatibility-layer",
+    "packages/plugin-abilities"
   ],
   "bin": {
     "oac": "./bin/oac.js"
@@ -82,6 +83,8 @@
     "dev:build": "cd evals/framework && npm run build",
     "dev:test": "cd evals/framework && npm test",
     "dev:clean": "cd evals/framework && rm -rf dist node_modules && npm install",
+    "build:plugin-abilities": "npm run --workspace @openagents/plugin-abilities build",
+    "test:plugin-abilities": "npm run --workspace @openagents/plugin-abilities test",
     "validate:registry": "bun run scripts/registry/validate-registry.ts",
     "validate:context-links": "bun run scripts/validation/validate-markdown-links.ts",
     "validate:registry:verbose": "bun run scripts/registry/validate-registry.ts -v",
