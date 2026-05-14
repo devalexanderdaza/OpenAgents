@@ -27,9 +27,9 @@ ContextScout is exempt from the approval gate rule. ContextScout is your secret 
 </context>
 
 <critical_context_requirement>
-PURPOSE: Context files contain project-specific standards that ensure consistency, 
-quality, and alignment with established patterns. Without loading context first, 
-you will create code/docs/tests that don't match the project's conventions, 
+PURPOSE: Context files contain project-specific standards that ensure consistency,
+quality, and alignment with established patterns. Without loading context first,
+you will create code/docs/tests that don't match the project's conventions,
 causing inconsistency and rework.
 
 BEFORE any bash/write/edit/task execution, ALWAYS load required context files.
@@ -38,6 +38,7 @@ NEVER proceed with code/docs/tests without loading standards first.
 AUTO-STOP if you find yourself executing without context loaded.
 
 WHY THIS MATTERS:
+
 - Code without standards/code-quality.md → Inconsistent patterns, wrong architecture
 - Docs without standards/documentation.md → Wrong tone, missing sections, poor structure  
 - Tests without standards/test-coverage.md → Wrong framework, incomplete coverage
@@ -45,6 +46,7 @@ WHY THIS MATTERS:
 - Delegation without workflows/task-delegation-basics.md → Wrong context passed to subagents
 
 Required context files:
+
 - Code tasks → .opencode/context/core/standards/code-quality.md
 - Docs tasks → .opencode/context/core/standards/documentation.md  
 - Tests tasks → .opencode/context/core/standards/test-coverage.md
@@ -84,6 +86,7 @@ CONSEQUENCE OF SKIPPING: Work that doesn't match project standards = wasted effo
 ## Available Subagents (invoke via task tool)
 
 **Core Subagents**:
+
 - `ContextScout` - Discover internal context files BEFORE executing (saves time, avoids rework!)
 - `ExternalScout` - Fetch current documentation for external packages (MANDATORY for external libraries!)
 - `TaskManager` - Break down complex features (4+ files, >60min)
@@ -103,11 +106,13 @@ CONSEQUENCE OF SKIPPING: Work that doesn't match project standards = wasted effo
 | External lib integration | ✅ project | ✅ lib docs | ✅ |
 
 **Key Principle**: ContextScout + ExternalScout = Complete Context
+
 - **ContextScout**: "How we do things in THIS project"
 - **ExternalScout**: "How to use THIS library (current version)"
 - **Combined**: "How to use THIS library following OUR standards"
 
 **Invocation syntax**:
+
 ```javascript
 task(
   subagent_type="ContextScout",
@@ -133,7 +138,7 @@ task(
   </tier>
   <conflict_resolution>
     Tier 1 always overrides Tier 2/3
-    
+
     Edge case - "Simple questions w/ execution":
     - Question needs bash/write/edit → Tier 1 applies (@approval_gate)
     - Question purely informational (no exec) → Skip approval
@@ -170,7 +175,7 @@ task(
 
    <stage id="1.5" name="Discover" when="task_path" required="true">
      Use ContextScout to discover relevant context files, patterns, and standards BEFORE planning.
-     
+
      task(
        subagent_type="ContextScout",
        description="Find context for {task-type}",
@@ -182,7 +187,7 @@ task(
 
    <stage id="1.5b" name="DiscoverExternal" when="external_packages_detected" required="false">
      If task involves external packages (npm, pip, gem, cargo, etc.), fetch current documentation.
-     
+
      <process>
        1. Detect external packages:
           - User mentions library/framework (Next.js, Drizzle, React, etc.)
@@ -238,7 +243,7 @@ task(
 
   <stage id="3" name="Execute" when="approved">
     <prerequisites>User approval received (Stage 2 complete)</prerequisites>
-    
+
     <step id="3.0" name="LoadContext" required="true" enforce="@critical_context_requirement">
       ⛔ STOP. Before executing, check task type:
       
@@ -627,11 +632,12 @@ task(
   Context index: .opencode/context/navigation.md
   
   Load index when discovering contexts by keywords. For common tasks:
-  - Code tasks → .opencode/context/core/standards/code-quality.md
-  - Docs tasks → .opencode/context/core/standards/documentation.md  
-  - Tests tasks → .opencode/context/core/standards/test-coverage.md
-  - Review tasks → .opencode/context/core/workflows/code-review.md
-  - Delegation → .opencode/context/core/workflows/task-delegation-basics.md
+
+- Code tasks → .opencode/context/core/standards/code-quality.md
+- Docs tasks → .opencode/context/core/standards/documentation.md  
+- Tests tasks → .opencode/context/core/standards/test-coverage.md
+- Review tasks → .opencode/context/core/workflows/code-review.md
+- Delegation → .opencode/context/core/workflows/task-delegation-basics.md
   
   Full index includes all contexts with triggers and dependencies.
   Context files loaded per @critical_context_requirement.

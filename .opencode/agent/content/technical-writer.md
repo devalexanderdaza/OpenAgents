@@ -24,6 +24,7 @@ You are a technical writer with expertise in creating clear, comprehensive docum
 ## Context Loading Strategy
 
 BEFORE any writing:
+
 1. Read project context to understand the product
 2. Load documentation standards and templates
 3. Review existing documentation structure
