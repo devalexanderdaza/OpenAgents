@@ -9,7 +9,7 @@
 
 Issue #7 requires a lifecycle decision for `packages/plugin-abilities`: keep it as an integrated workspace package or publish/use it as an external package.
 
-The repository currently contains `packages/plugin-abilities` with its own architecture, tests, and package manifest, while root workspaces currently include only `evals/framework`, `packages/cli`, and `packages/compatibility-layer`.
+Before this decision/PR, the repository contained `packages/plugin-abilities` with its own architecture, tests, and package manifest, while root workspaces included only `evals/framework`, `packages/cli`, and `packages/compatibility-layer`.
 
 Issue #8 depends on this decision because integration mechanics (workspace wiring, build/test flow, dependency boundaries, and release flow) differ significantly between an internal workspace package and an external dependency.
 
@@ -41,7 +41,7 @@ Issue #8 must implement integration strategy assuming workspace lifecycle:
 
 1. Add `packages/plugin-abilities` to root workspace configuration.
 2. Use workspace-local linking/consumption patterns for internal integration points.
-3. Align build/test commands so plugin-abilities is validated within repository CI flows.
+3. Add opt-in root build/test commands for `plugin-abilities` and defer mandatory CI workflow validation until package build/test prerequisites are stabilized.
 4. Keep package boundaries explicit (consume exports, avoid private file coupling).
 5. Defer external publish/release automation until a future ADR revisits externalization.
 
