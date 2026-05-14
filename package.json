@@ -87,6 +87,7 @@
     "test:plugin-abilities": "npm run --workspace @openagents/plugin-abilities test",
     "validate:registry": "bun run scripts/registry/validate-registry.ts",
     "validate:context-links": "bun run scripts/validation/validate-markdown-links.ts",
+    "validate:package-manager-policy": "bun run scripts/validation/validate-package-manager-policy.ts",
     "validate:registry:verbose": "bun run scripts/registry/validate-registry.ts -v",
     "validate:registry:fix": "bun run scripts/registry/validate-registry.ts -f"
   },

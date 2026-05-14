@@ -163,6 +163,7 @@ jobs:
       has-evals: ${{ steps.filter.outputs.evals }}
       has-docs: ${{ steps.filter.outputs.docs }}
       has-workflows: ${{ steps.filter.outputs.workflows }}
+      has-package-policy-impact: ${{ steps.filter.outputs.package_policy_impact }}
     
     steps:
       - name: Checkout code
@@ -205,6 +206,15 @@ jobs:
           else
             echo "has-workflows=false" >> $GITHUB_OUTPUT
             echo "ℹ️ No workflow changes"
+          fi
+
+          # Check for package-manager policy impact
+          if echo "$CHANGED_FILES" | grep -Eq "^(package.json|package-lock.json|scripts/validation/validate-package-manager-policy.ts|docs/package-manager-policy.md|packages/plugin-abilities/bun.lock|\.opencode/plugin/bun.lock|\.opencode/tool/bun.lock|\.opencode/package-lock.json|packages/compatibility-layer/package-lock.json)$"; then
+            echo "package_policy_impact=true" >> $GITHUB_OUTPUT
+            echo "✅ Package manager policy-impacting changes detected"
+          else
+            echo "package_policy_impact=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No package manager policy-impacting changes"
           fi
 
   build-check:
@@ -261,10 +271,45 @@ jobs:
           echo "- TypeScript errors: Fix type issues in \`evals/framework/src/\`" >> $GITHUB_STEP_SUMMARY
           echo "- YAML validation: Check test files in \`evals/agents/*/tests/\`" >> $GITHUB_STEP_SUMMARY
 
+  package-manager-policy-check:
+    name: Package Manager Policy Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [pr-title-check, check-changes]
+    if: |
+      needs.pr-title-check.outputs.title-valid == 'true' &&
+      needs.check-changes.outputs.has-package-policy-impact == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Validate package manager policy
+        run: npm run validate:package-manager-policy
+
+      - name: Summary
+        if: success()
+        run: |
+          echo "## ✅ Package Manager Policy Check Passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Lockfile/package-manager policy validation passed" >> $GITHUB_STEP_SUMMARY
+
+      - name: Failure summary
+        if: failure()
+        run: |
+          echo "## ❌ Package Manager Policy Check Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Run locally: \`npm run validate:package-manager-policy\`" >> $GITHUB_STEP_SUMMARY
+
   summary:
     name: PR Checks Summary
     runs-on: ubuntu-latest
-    needs: [pr-title-check, check-changes, build-check]
+    needs: [pr-title-check, check-changes, build-check, package-manager-policy-check]
     if: always()
     
     steps:
@@ -295,6 +340,10 @@ jobs:
             if [ "${{ needs.check-changes.outputs.has-workflows }}" == "true" ]; then
               echo "  - ⚙️ Workflow changes detected" >> $GITHUB_STEP_SUMMARY
             fi
+
+            if [ "${{ needs.check-changes.outputs.has-package-policy-impact }}" == "true" ]; then
+              echo "  - 📦 Package manager policy-impacting changes detected" >> $GITHUB_STEP_SUMMARY
+            fi
           else
             echo "⏭️ **Changed Files:** Skipped (title validation failed)" >> $GITHUB_STEP_SUMMARY
           fi
@@ -307,12 +356,22 @@ jobs:
           elif [ "${{ needs.build-check.result }}" == "failure" ]; then
             echo "❌ **Build & Validate:** Failed - check logs" >> $GITHUB_STEP_SUMMARY
           fi
+
+          # Package Manager Policy Check
+          if [ "${{ needs.package-manager-policy-check.result }}" == "success" ]; then
+            echo "✅ **Package Manager Policy:** Passed" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.package-manager-policy-check.result }}" == "skipped" ]; then
+            echo "⏭️ **Package Manager Policy:** Skipped (no policy-impacting changes)" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.package-manager-policy-check.result }}" == "failure" ]; then
+            echo "❌ **Package Manager Policy:** Failed - check logs" >> $GITHUB_STEP_SUMMARY
+          fi
           
           echo "" >> $GITHUB_STEP_SUMMARY
           
           # Overall status
           if [ "${{ needs.pr-title-check.result }}" == "success" ] && \
-             ([ "${{ needs.build-check.result }}" == "success" ] || [ "${{ needs.build-check.result }}" == "skipped" ]); then
+             ([ "${{ needs.build-check.result }}" == "success" ] || [ "${{ needs.build-check.result }}" == "skipped" ]) && \
+             ([ "${{ needs.package-manager-policy-check.result }}" == "success" ] || [ "${{ needs.package-manager-policy-check.result }}" == "skipped" ]); then
             echo "### ✅ All Required Checks Passed!" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "This PR is ready for review." >> $GITHUB_STEP_SUMMARY
