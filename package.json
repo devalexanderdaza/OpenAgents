@@ -85,7 +85,6 @@
     "dev:clean": "cd evals/framework && rm -rf dist node_modules && npm install",
     "build:plugin-abilities": "npm run --workspace @openagents/plugin-abilities build",
     "test:plugin-abilities": "npm run --workspace @openagents/plugin-abilities test",
-    "lint:plugin-abilities": "npm run --workspace @openagents/plugin-abilities lint",
     "validate:registry": "bun run scripts/registry/validate-registry.ts",
     "validate:context-links": "bun run scripts/validation/validate-markdown-links.ts",
     "validate:registry:verbose": "bun run scripts/registry/validate-registry.ts -v",
