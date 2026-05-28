@@ -47,7 +47,7 @@ function walk(dir: string, out: string[]) {
       continue
     }
 
-    if (entry.isFile() && (entry.name === "package-lock.json" || entry.name === "bun.lock")) {
+    if (entry.isFile() && ["package-lock.json", "bun.lock", "yarn.lock", "pnpm-lock.yaml"].includes(entry.name)) {
       out.push(rel)
     }
   }
