@@ -209,8 +209,7 @@ jobs:
           fi
 
           # Check for package-manager policy impact
-          if echo "$CHANGED_FILES" | grep -Eq "^(package.json|package-lock.json|scripts/validation/validate-package-manager-policy.ts|docs/package-manager-policy.md|packages/plugin-abilities/bun.lock|\.opencode/plugin/bun.lock|\.opencode/tool/bun.lock|\.opencode/package-lock.json|packages/compatibility-layer/package-lock.json)$"; then
-            echo "package_policy_impact=true" >> $GITHUB_OUTPUT
+          if echo "$CHANGED_FILES" | grep -Eq "(^|/)(package.json|package-lock.json|bun.lock|yarn.lock|pnpm-lock.yaml)$|^(scripts/validation/validate-package-manager-policy.ts|docs/package-manager-policy.md)$"; then
             echo "✅ Package manager policy-impacting changes detected"
           else
             echo "package_policy_impact=false" >> $GITHUB_OUTPUT
