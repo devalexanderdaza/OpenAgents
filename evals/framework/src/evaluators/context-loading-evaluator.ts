@@ -533,23 +533,6 @@ export class ContextLoadingEvaluator extends BaseEvaluator {
   }
 
   /**
-   * Get required context file for a task type
-   */
-  private getRequiredContext(userMessage: string): string | undefined {
-    // Simple heuristic - could be enhanced
-    if (/test|spec|jest|vitest/i.test(userMessage)) {
-      return '.opencode/context/core/standards/test-coverage.md';
-    }
-    if (/document|readme|docs/i.test(userMessage)) {
-      return '.opencode/context/core/standards/documentation.md';
-    }
-    if (/code|implement|feature|refactor/i.test(userMessage)) {
-      return '.opencode/context/core/standards/code-quality.md';
-    }
-    return undefined;
-  }
-
-  /**
    * Check if task is bash-only (no write/edit/task tools)
    * Per openagent.md line 172, 184: "bash-only → No context needed"
    */

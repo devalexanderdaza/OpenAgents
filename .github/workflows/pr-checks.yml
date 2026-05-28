@@ -160,9 +160,9 @@ jobs:
     needs: pr-title-check
     if: needs.pr-title-check.outputs.title-valid == 'true'
     outputs:
-      has-evals: ${{ steps.filter.outputs.evals }}
-      has-docs: ${{ steps.filter.outputs.docs }}
-      has-workflows: ${{ steps.filter.outputs.workflows }}
+      has-evals: ${{ steps.filter.outputs.has-evals }}
+      has-docs: ${{ steps.filter.outputs.has-docs }}
+      has-workflows: ${{ steps.filter.outputs.has-workflows }}
       has-package-policy-impact: ${{ steps.filter.outputs.package_policy_impact }}
     
     steps:

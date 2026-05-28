@@ -34,7 +34,7 @@ describe('ContextLoadingEvaluator', () => {
       expect(result.metadata?.contextLoadedBeforeExecution).toBe(true);
     });
 
-    it('should detect .opencode/context/*.md as context files', async () => {
+    it('should detect nested .opencode/context/**.md files as context files', async () => {
       const timeline: TimelineEvent[] = [
         createReadToolEvent('/project/.opencode/context/core/standards/code-quality.md', 1000),
         createWriteToolEvent('/src/app.ts', 2000),

@@ -31,7 +31,7 @@ const ignoredDirs = new Set([".git", "node_modules", "dist", "build"])
 type LockfileRecord = {
   path: string
   dir: string
-  name: "package-lock.json" | "bun.lock"
+  name: "package-lock.json" | "bun.lock" | "yarn.lock" | "pnpm-lock.yaml"
 }
 
 function walk(dir: string, out: string[]) {
@@ -60,11 +60,15 @@ function normalizeDir(filePath: string) {
 
 function readRootPackageManager(): string | undefined {
   const packageJsonPath = join(repoRoot, "package.json")
-  const content = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
-    packageManager?: string
+  try {
+    const content = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
+      packageManager?: string
+    }
+    return content.packageManager
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    throw new Error(`Failed to parse root package.json at ${packageJsonPath}: ${message}`)
   }
-
-  return content.packageManager
 }
 
 function main() {
@@ -75,7 +79,13 @@ function main() {
   const records: LockfileRecord[] = lockfiles.map((path) => ({
     path,
     dir: normalizeDir(path),
-    name: path.endsWith("bun.lock") ? "bun.lock" : "package-lock.json",
+    name: path.endsWith("/bun.lock") || path === "bun.lock"
+      ? "bun.lock"
+      : path.endsWith("/package-lock.json") || path === "package-lock.json"
+        ? "package-lock.json"
+        : path.endsWith("/yarn.lock") || path === "yarn.lock"
+          ? "yarn.lock"
+          : "pnpm-lock.yaml",
   }))
 
   const violations: string[] = []
@@ -105,11 +115,15 @@ function main() {
         `Disallowed bun.lock location: ${record.path} (allowed dirs: ${Array.from(allowedBunLockDirs).sort().join(", ")})`,
       )
     }
+
+    if (record.name === "yarn.lock" || record.name === "pnpm-lock.yaml") {
+      violations.push(`Disallowed lockfile type: ${record.path} (${record.name} is not permitted)`)
+    }
   }
 
-  const byDir = new Map<string, Set<"package-lock.json" | "bun.lock">>()
+  const byDir = new Map<string, Set<LockfileRecord["name"]>>()
   for (const record of records) {
-    const current = byDir.get(record.dir) ?? new Set<"package-lock.json" | "bun.lock">()
+    const current = byDir.get(record.dir) ?? new Set<LockfileRecord["name"]>()
     current.add(record.name)
     byDir.set(record.dir, current)
   }
